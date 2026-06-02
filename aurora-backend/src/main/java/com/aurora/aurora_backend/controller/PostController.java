@@ -1,0 +1,37 @@
+package com.aurora.aurora_backend.controller;
+
+import com.aurora.aurora_backend.service.PostService;
+
+import java.util.List;
+
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.aurora.aurora_backend.dto.CreatePostRequest;
+import com.aurora.aurora_backend.dto.PostResponseDTO;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/posts")
+@RequiredArgsConstructor
+@Validated
+public class PostController {
+
+    private final PostService postService;
+
+    @PostMapping
+    public PostResponseDTO createPost(@Valid @RequestBody CreatePostRequest request) {
+        return postService.createPost(request);
+    }
+
+    @GetMapping
+    public List<PostResponseDTO> getAllPosts() {
+        return postService.getAllPosts();
+    }
+}
