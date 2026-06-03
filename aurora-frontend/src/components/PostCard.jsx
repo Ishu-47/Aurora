@@ -1,46 +1,78 @@
 import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
 
 function PostCard({ post }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="
-        backdrop-blur-xl
-        bg-white/5
-        border
-        border-white/10
-        rounded-3xl
-        p-6
-      "
-    >
-      <div className="flex justify-between mb-4">
-        <h3
-          className="
-            text-purple-400
-            font-semibold
-          "
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.2 }}
+            className="
+                backdrop-blur-xl
+                bg-white/5
+                border border-white/10
+                rounded-3xl
+                p-6
+                shadow-lg shadow-black/10
+            "
         >
-          @{post.username}
-        </h3>
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                    <div
+                        className="
+                            h-11 w-11
+                            rounded-full
+                            bg-linear-to-r
+                            from-pink-500
+                            to-purple-600
+                            flex items-center justify-center
+                            text-white
+                            font-bold
+                            shadow-lg
+                        "
+                    >
+                        {post.username?.charAt(0)?.toUpperCase()}
+                    </div>
 
-        <span
-          className="
-            text-sm
-            text-gray-400
-          "
-        >
-          {new Date(
-            post.createdAt
-          ).toLocaleString()}
-        </span>
-      </div>
+                    <div>
+                        <h3
+                            className="
+                                text-purple-200
+                                font-semibold
+                            "
+                        >
+                            @{post.username}
+                        </h3>
 
-      <p className="text-white">
-        {post.content}
-      </p>
-    </motion.div>
-  );
+                        <p
+                            className="
+                                text-sm
+                                text-purple-300/50
+                            "
+                        >
+                            {formatDistanceToNow(
+                                new Date(post.createdAt),
+                                { addSuffix: true }
+                            )}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <p
+                className="
+                    mt-5
+                    text-white
+                    text-lg
+                    leading-relaxed
+                    wrap-break-word
+                "
+            >
+                {post.content}
+            </p>
+        </motion.div>
+    );
 }
 
 export default PostCard;
