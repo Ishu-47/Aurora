@@ -34,20 +34,24 @@ function Register() {
         try {
             setLoading(true);
 
-            const response = await api.post(
-                "/auth/login",
-                formData
-            );
+            // Register
+            await api.post("/auth/register", formData);
 
-            login(response.data);
+            // Login automatically
+            const loginResponse = await api.post("/auth/login", {
+                email: formData.email,
+                password: formData.password,
+            });
 
-            toast.success("Login Successful");
+            login(loginResponse.data);
+
+            toast.success("Account Created Successfully");
 
             navigate("/");
         } catch (error) {
             toast.error(
                 error.response?.data?.error ||
-                "Login Failed"
+                "Registration Failed"
             );
         } finally {
             setLoading(false);
@@ -57,7 +61,7 @@ function Register() {
         <div
             className="
       min-h-screen
-      bg-gradient-to-br
+      bg-linear-to-br
       from-slate-950
       via-purple-950
       to-indigo-950
@@ -112,6 +116,28 @@ function Register() {
                         onSubmit={handleSubmit}
                         className="space-y-5"
                     >
+                        <input
+                            type="text"
+                            name="username"
+                            placeholder="Username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className="
+    w-full
+    p-4
+    rounded-xl
+    bg-white/10
+    border
+    border-white/20
+    text-white
+    placeholder-gray-400
+    outline-none
+    focus:border-purple-500
+    focus:ring-2
+    focus:ring-purple-500/30
+    transition-all
+  "
+                        />
                         <input
                             type="email"
                             name="email"
@@ -187,7 +213,7 @@ function Register() {
                             whileTap={{ scale: 0.96 }}
                             className="
               w-full
-              bg-gradient-to-r
+              bg-linear-to-r
               from-purple-600
               to-indigo-600
               hover:from-purple-500
