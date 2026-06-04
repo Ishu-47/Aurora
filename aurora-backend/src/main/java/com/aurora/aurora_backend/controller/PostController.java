@@ -4,8 +4,11 @@ import com.aurora.aurora_backend.service.PostService;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,5 +36,13 @@ public class PostController {
     @GetMapping
     public List<PostResponseDTO> getAllPosts() {
         return postService.getAllPosts();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(
+            @PathVariable Long id) {
+        postService.deletePost(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

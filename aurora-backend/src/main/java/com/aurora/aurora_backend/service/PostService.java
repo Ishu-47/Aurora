@@ -18,44 +18,60 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PostService {
-    private final PostRepository postRepository;
-    private final UserRepository userRepository;
+        private final PostRepository postRepository;
+        private final UserRepository userRepository;
 
-    public PostResponseDTO createPost(CreatePostRequest request){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        Post post = Post.builder()
-                    .content(request.getContent())
-                    .author(user)
-                    .build();
+        public PostResponseDTO createPost(CreatePostRequest request) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                String email = authentication.getName();
+                User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+                Post post = Post.builder()
+                                .content(request.getContent())
+                                .author(user)
+                                .build();
 
-        Post savedPost = postRepository.save(post);
-        return new PostResponseDTO(savedPost.getId(), savedPost.getContent(), savedPost.getAuthor().getDisplayUsername(), savedPost.getCreatedAt());
-    }
-    public List<PostResponseDTO> getAllPosts(){
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+                Post savedPost = postRepository.save(post);
+                return new PostResponseDTO(savedPost.getId(), savedPost.getContent(),
+                                savedPost.getAuthor().getDisplayUsername(), savedPost.getCreatedAt());
+        }
 
-        return posts.stream()
-               .map(post -> new PostResponseDTO(post.getId(), post.getContent(), post.getAuthor().getDisplayUsername(), post.getCreatedAt())).toList();
-    }
+        public List<PostResponseDTO> getAllPosts() {
+                List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
-    public List<PostResponseDTO> getUserPosts(String username) {
+                return posts.stream()
+                                .map(post -> new PostResponseDTO(post.getId(), post.getContent(),
+                                                post.getAuthor().getDisplayUsername(), post.getCreatedAt()))
+                                .toList();
+        }
 
-    User user = userRepository
-            .findByUsername(username)
-            .orElseThrow(() ->
-                    new RuntimeException("User not found"));
+        public List<PostResponseDTO> getUserPosts(String username) {
 
-    return postRepository
-            .findByAuthorOrderByCreatedAtDesc(user)
-            .stream()
-            .map(post -> new PostResponseDTO(
-                    post.getId(),
-                    post.getContent(),
-                    post.getAuthor().getDisplayUsername(),
-                    post.getCreatedAt()
-            ))
-            .toList();
-}
+                User user = userRepository
+                                .findByUsername(username)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                return postRepository
+                                .findByAuthorOrderByCreatedAtDesc(user)
+                                .stream()
+                                .map(post -> new PostResponseDTO(
+                                                post.getId(),
+                                                post.getContent(),
+                                                post.getAuthor().getDisplayUsername(),
+                                                post.getCreatedAt()))
+                                .toList();
+        }
+
+        public void deletePost(Long postId){
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                User currentUser = (User)authentication.getPrincipal();
+                
+                Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+
+                if(!post.getAuthor().getId().equals(currentUser.getId())){
+                        throw new RuntimeException("You can delete only your own posts");
+                }
+                postRepository.delete(post);
+
+        }
 }
