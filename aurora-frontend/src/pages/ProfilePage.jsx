@@ -2,9 +2,11 @@ import api from "../api/axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PostCard from "../components/PostCard";
+import { useAuth } from "../context/AuthContext";
 
 function ProfilePage() {
   const { username } = useParams();
+  const { user } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -133,6 +135,8 @@ function ProfilePage() {
                 <PostCard
                   key={post.id}
                   post={post}
+                  currentUser={user}
+                  onDelete={fetchProfile}
                 />
               ))}
             </div>

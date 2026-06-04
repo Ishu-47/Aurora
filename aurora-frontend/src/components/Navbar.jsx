@@ -75,7 +75,7 @@ function Navbar() {
                 {/* User Section */}
                 <div className="flex items-center gap-4">
                     <Link
-                        to={`/profile/${user?.username}`}
+                        to={`/${user?.username}`}
                         className="
                             flex items-center gap-3
                             group

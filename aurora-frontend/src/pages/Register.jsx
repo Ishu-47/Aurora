@@ -229,7 +229,7 @@ function Register() {
               shadow-purple-500/20
             "
                         >
-                            {loading ? "Signing In..." : "Sign In"}
+                            {loading ? "Signing Up..." : "Register"}
                         </motion.button>
                     </form>
 

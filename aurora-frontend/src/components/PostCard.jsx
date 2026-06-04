@@ -1,8 +1,27 @@
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
+import api from "../api/axios";
+import toast from "react-hot-toast";
+// import { toast } from "react-toastify";
 
-function PostCard({ post }) {
+function PostCard({ post, currentUser, onDelete }) {
+
+    const handleDelete = async () => {
+        try {
+            await api.delete(`/posts/${post.id}`);
+
+            toast.success("Post deleted");
+
+            if (onDelete) {
+                onDelete();
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to delete post");
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -19,6 +38,7 @@ function PostCard({ post }) {
             "
         >
             <div className="flex items-start justify-between">
+
                 <div className="flex items-center gap-3">
                     <div
                         className="
@@ -64,6 +84,20 @@ function PostCard({ post }) {
                         </p>
                     </div>
                 </div>
+
+                {currentUser?.username === post.username && (
+                    <button
+                        onClick={handleDelete}
+                        className="
+                            text-red-400
+                            hover:text-red-300
+                            text-sm
+                            font-medium
+                        "
+                    >
+                        Delete
+                    </button>
+                )}
             </div>
 
             <p
