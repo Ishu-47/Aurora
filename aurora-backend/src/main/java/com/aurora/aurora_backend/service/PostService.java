@@ -39,4 +39,23 @@ public class PostService {
         return posts.stream()
                .map(post -> new PostResponseDTO(post.getId(), post.getContent(), post.getAuthor().getDisplayUsername(), post.getCreatedAt())).toList();
     }
+
+    public List<PostResponseDTO> getUserPosts(String username) {
+
+    User user = userRepository
+            .findByUsername(username)
+            .orElseThrow(() ->
+                    new RuntimeException("User not found"));
+
+    return postRepository
+            .findByAuthorOrderByCreatedAtDesc(user)
+            .stream()
+            .map(post -> new PostResponseDTO(
+                    post.getId(),
+                    post.getContent(),
+                    post.getAuthor().getDisplayUsername(),
+                    post.getCreatedAt()
+            ))
+            .toList();
+}
 }
