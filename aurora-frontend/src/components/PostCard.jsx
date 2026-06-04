@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
 
 function PostCard({ post }) {
     return (
@@ -42,7 +43,12 @@ function PostCard({ post }) {
                                 font-semibold
                             "
                         >
-                            @{post.username}
+                            <Link
+                                to={`/${post.username}`}
+                                className="font-medium hover:underline"
+                            >
+                                @{post.username}
+                            </Link>
                         </h3>
 
                         <p
