@@ -34,6 +34,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 200)
+    private String bio;
+
+    private String profilePictureUrl;
+
     private LocalDateTime createdAt;
 
     @PrePersist
