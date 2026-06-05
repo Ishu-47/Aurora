@@ -83,7 +83,7 @@ function PostCard({ post, currentUser, onDelete }) {
                         className="
                             h-11 w-11
                             rounded-full
-                            bg-gradient-to-r
+                            bg-linear-to-r
                             from-pink-500
                             to-purple-600
                             flex items-center justify-center
@@ -135,7 +135,7 @@ function PostCard({ post, currentUser, onDelete }) {
                     text-white
                     text-lg
                     leading-relaxed
-                    break-words
+                    wrap-break-word
                 "
             >
                 {post.content}
