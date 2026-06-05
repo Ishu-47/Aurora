@@ -37,20 +37,16 @@ public class PostService {
 
         public List<PostResponseDTO> getAllPosts() {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        User currentUser =
-                (User) authentication.getPrincipal();
+                User currentUser = (User) authentication.getPrincipal();
 
-        List<Post> posts =
-                postRepository.findAllByOrderByCreatedAtDesc();
+                List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
-        return posts.stream()
-                .map(post ->
-                        mapToPostResponse(post, currentUser))
-                .toList();
-    }
+                return posts.stream()
+                                .map(post -> mapToPostResponse(post, currentUser))
+                                .toList();
+        }
 
         public List<PostResponseDTO> getUserPosts(String username) {
 
@@ -85,6 +81,7 @@ public class PostService {
 
         private PostResponseDTO mapToPostResponse(Post post, User currentUser) {
                 long likeCount = post.getLikes().size();
+                long commentCount = post.getComments().size();
 
                 boolean likedByCurrentUser = post.getLikes()
                                 .stream()
@@ -92,7 +89,13 @@ public class PostService {
                                 .map(User::getId)
                                 .anyMatch(id -> id.equals(currentUser.getId()));
 
-                return new PostResponseDTO(post.getId(), post.getContent(), post.getAuthor().getDisplayUsername(),
-                                post.getCreatedAt(), likeCount, likedByCurrentUser);
+                return new PostResponseDTO(
+                                post.getId(),
+                                post.getContent(),
+                                post.getAuthor().getDisplayUsername(),
+                                post.getCreatedAt(),
+                                likeCount,
+                                likedByCurrentUser,
+                                commentCount);
         }
 }

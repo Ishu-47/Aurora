@@ -4,16 +4,26 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
+import CommentSection from "./CommentSection";
 
 function PostCard({ post, currentUser, onDelete }) {
     const [liked, setLiked] = useState(post.likedByCurrentUser);
     const [likeCount, setLikeCount] = useState(post.likeCount);
+    const [commentCount, setCommentCount] = useState(
+        post.commentCount
+    );
     const [loadingLike, setLoadingLike] = useState(false);
+    const [showComments, setShowComments] = useState(false);
 
     useEffect(() => {
         setLiked(post.likedByCurrentUser);
         setLikeCount(post.likeCount);
-    }, [post.likedByCurrentUser, post.likeCount]);
+        setCommentCount(post.commentCount);
+    }, [
+        post.likedByCurrentUser,
+        post.likeCount,
+        post.commentCount,
+    ]);
 
     const handleLike = async () => {
         if (loadingLike) return;
@@ -73,7 +83,7 @@ function PostCard({ post, currentUser, onDelete }) {
                         className="
                             h-11 w-11
                             rounded-full
-                            bg-linear-to-r
+                            bg-gradient-to-r
                             from-pink-500
                             to-purple-600
                             flex items-center justify-center
@@ -86,12 +96,7 @@ function PostCard({ post, currentUser, onDelete }) {
                     </div>
 
                     <div>
-                        <h3
-                            className="
-                                text-purple-200
-                                font-semibold
-                            "
-                        >
+                        <h3 className="text-purple-200 font-semibold">
                             <Link
                                 to={`/${post.username}`}
                                 className="font-medium hover:underline"
@@ -100,12 +105,7 @@ function PostCard({ post, currentUser, onDelete }) {
                             </Link>
                         </h3>
 
-                        <p
-                            className="
-                                text-sm
-                                text-purple-300/50
-                            "
-                        >
+                        <p className="text-sm text-purple-300/50">
                             {formatDistanceToNow(
                                 new Date(post.createdAt),
                                 { addSuffix: true }
@@ -135,29 +135,61 @@ function PostCard({ post, currentUser, onDelete }) {
                     text-white
                     text-lg
                     leading-relaxed
-                    wrap-break-words
+                    break-words
                 "
             >
                 {post.content}
             </p>
 
-            <div className="mt-5 flex items-center gap-2">
-                <button
-                    onClick={handleLike}
-                    disabled={loadingLike}
-                    className={`
-            text-xl transition-transform
-            hover:scale-110
-            ${loadingLike ? "opacity-50 cursor-not-allowed" : ""}
-        `}
-                >
-                    {liked ? "❤️" : "🤍"}
-                </button>
+            <div className="mt-5 flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleLike}
+                        disabled={loadingLike}
+                        className={`
+                            text-xl transition-transform
+                            hover:scale-110
+                            ${loadingLike
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }
+                        `}
+                    >
+                        {liked ? "❤️" : "🤍"}
+                    </button>
 
-                <span className="text-purple-300 text-sm font-medium">
-                    {likeCount}
-                </span>
+                    <span className="text-purple-300 text-sm font-medium">
+                        {likeCount}
+                    </span>
+                </div>
+
+                <button
+                    onClick={() =>
+                        setShowComments((prev) => !prev)
+                    }
+                    className="
+                        flex items-center gap-2
+                        text-purple-300
+                        hover:text-white
+                        transition
+                    "
+                >
+                    <span className="text-lg">💬</span>
+
+                    <span className="text-sm font-medium">
+                        {commentCount}
+                    </span>
+                </button>
             </div>
+
+            {showComments && (
+                <CommentSection
+                    postId={post.id}
+                    onCommentAdded={() =>
+                        setCommentCount((prev) => prev + 1)
+                    }
+                />
+            )}
         </motion.div>
     );
 }
