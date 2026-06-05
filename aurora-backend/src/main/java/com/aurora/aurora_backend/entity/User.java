@@ -1,8 +1,10 @@
 package com.aurora.aurora_backend.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +43,9 @@ public class User implements UserDetails {
 
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
@@ -60,7 +65,8 @@ public class User implements UserDetails {
     public String getUsername() {
         return email;
     }
-    public String getDisplayUsername(){
+
+    public String getDisplayUsername() {
         return username;
     }
 

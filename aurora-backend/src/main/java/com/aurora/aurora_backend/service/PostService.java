@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.aurora.aurora_backend.dto.CreatePostRequest;
 import com.aurora.aurora_backend.dto.PostResponseDTO;
+import com.aurora.aurora_backend.entity.Like;
 import com.aurora.aurora_backend.entity.Post;
 import com.aurora.aurora_backend.entity.User;
 import com.aurora.aurora_backend.repository.PostRepository;
@@ -31,20 +32,31 @@ public class PostService {
                                 .build();
 
                 Post savedPost = postRepository.save(post);
-                return new PostResponseDTO(savedPost.getId(), savedPost.getContent(),
-                                savedPost.getAuthor().getDisplayUsername(), savedPost.getCreatedAt());
+                return mapToPostResponse(savedPost, user);
         }
 
         public List<PostResponseDTO> getAllPosts() {
-                List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
-                return posts.stream()
-                                .map(post -> new PostResponseDTO(post.getId(), post.getContent(),
-                                                post.getAuthor().getDisplayUsername(), post.getCreatedAt()))
-                                .toList();
-        }
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        User currentUser =
+                (User) authentication.getPrincipal();
+
+        List<Post> posts =
+                postRepository.findAllByOrderByCreatedAtDesc();
+
+        return posts.stream()
+                .map(post ->
+                        mapToPostResponse(post, currentUser))
+                .toList();
+    }
 
         public List<PostResponseDTO> getUserPosts(String username) {
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                User currentUser = (User) authentication.getPrincipal();
 
                 User user = userRepository
                                 .findByUsername(username)
@@ -53,25 +65,34 @@ public class PostService {
                 return postRepository
                                 .findByAuthorOrderByCreatedAtDesc(user)
                                 .stream()
-                                .map(post -> new PostResponseDTO(
-                                                post.getId(),
-                                                post.getContent(),
-                                                post.getAuthor().getDisplayUsername(),
-                                                post.getCreatedAt()))
+                                .map(post -> mapToPostResponse(post, currentUser))
                                 .toList();
         }
 
-        public void deletePost(Long postId){
+        public void deletePost(Long postId) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                User currentUser = (User)authentication.getPrincipal();
-                
+                User currentUser = (User) authentication.getPrincipal();
+
                 Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
-                if(!post.getAuthor().getId().equals(currentUser.getId())){
+                if (!post.getAuthor().getId().equals(currentUser.getId())) {
                         throw new RuntimeException("You can delete only your own posts");
                 }
                 postRepository.delete(post);
 
+        }
+
+        private PostResponseDTO mapToPostResponse(Post post, User currentUser) {
+                long likeCount = post.getLikes().size();
+
+                boolean likedByCurrentUser = post.getLikes()
+                                .stream()
+                                .map(Like::getUser)
+                                .map(User::getId)
+                                .anyMatch(id -> id.equals(currentUser.getId()));
+
+                return new PostResponseDTO(post.getId(), post.getContent(), post.getAuthor().getDisplayUsername(),
+                                post.getCreatedAt(), likeCount, likedByCurrentUser);
         }
 }

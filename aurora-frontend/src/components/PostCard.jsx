@@ -3,19 +3,49 @@ import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import toast from "react-hot-toast";
-// import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
 
 function PostCard({ post, currentUser, onDelete }) {
+    const [liked, setLiked] = useState(post.likedByCurrentUser);
+    const [likeCount, setLikeCount] = useState(post.likeCount);
+    const [loadingLike, setLoadingLike] = useState(false);
+
+    useEffect(() => {
+        setLiked(post.likedByCurrentUser);
+        setLikeCount(post.likeCount);
+    }, [post.likedByCurrentUser, post.likeCount]);
+
+    const handleLike = async () => {
+        if (loadingLike) return;
+
+        try {
+            setLoadingLike(true);
+
+            const res = await api.post(`/posts/${post.id}/like`);
+
+            setLiked(res.data.liked);
+            setLikeCount(res.data.likeCount);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update like");
+        } finally {
+            setLoadingLike(false);
+        }
+    };
 
     const handleDelete = async () => {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this post?"
+        );
+
+        if (!confirmed) return;
+
         try {
             await api.delete(`/posts/${post.id}`);
 
             toast.success("Post deleted");
 
-            if (onDelete) {
-                onDelete();
-            }
+            onDelete?.();
         } catch (err) {
             console.error(err);
             toast.error("Failed to delete post");
@@ -38,7 +68,6 @@ function PostCard({ post, currentUser, onDelete }) {
             "
         >
             <div className="flex items-start justify-between">
-
                 <div className="flex items-center gap-3">
                     <div
                         className="
@@ -106,11 +135,29 @@ function PostCard({ post, currentUser, onDelete }) {
                     text-white
                     text-lg
                     leading-relaxed
-                    wrap-break-word
+                    wrap-break-words
                 "
             >
                 {post.content}
             </p>
+
+            <div className="mt-5 flex items-center gap-2">
+                <button
+                    onClick={handleLike}
+                    disabled={loadingLike}
+                    className={`
+            text-xl transition-transform
+            hover:scale-110
+            ${loadingLike ? "opacity-50 cursor-not-allowed" : ""}
+        `}
+                >
+                    {liked ? "❤️" : "🤍"}
+                </button>
+
+                <span className="text-purple-300 text-sm font-medium">
+                    {likeCount}
+                </span>
+            </div>
         </motion.div>
     );
 }
