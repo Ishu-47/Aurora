@@ -7,10 +7,19 @@ import api from "../api/axios";
 function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [feedType, setFeedType] = useState("feed");
 
   const fetchPosts = async () => {
     try {
-      const response = await api.get("/posts");
+      setLoading(true);
+
+      const endpoint =
+        feedType === "feed"
+          ? "/feed"
+          : "/explore";
+
+      const response = await api.get(endpoint);
+
       setPosts(response.data);
     } catch (error) {
       console.error(error);
@@ -21,63 +30,92 @@ function Home() {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [feedType]);
 
   return (
     <div
       className="
-                relative
-                min-h-screen
-                overflow-hidden
-                bg-linear-to-br
-                from-slate-950
-                via-purple-950
-                to-indigo-950
-            "
+        relative
+        min-h-screen
+        overflow-hidden
+        bg-linear-to-br
+        from-slate-950
+        via-purple-950
+        to-indigo-950
+      "
     >
       {/* Background Glow */}
       <div
         className="
-                    absolute
-                    top-20
-                    left-20
-                    h-72
-                    w-72
-                    rounded-full
-                    bg-purple-600/20
-                    blur-3xl
-                    pointer-events-none
-                "
+          absolute
+          top-20
+          left-20
+          h-72
+          w-72
+          rounded-full
+          bg-purple-600/20
+          blur-3xl
+          pointer-events-none
+        "
       />
 
       <div
         className="
-                    absolute
-                    bottom-20
-                    right-20
-                    h-96
-                    w-96
-                    rounded-full
-                    bg-indigo-600/20
-                    blur-3xl
-                    pointer-events-none
-                "
+          absolute
+          bottom-20
+          right-20
+          h-96
+          w-96
+          rounded-full
+          bg-indigo-600/20
+          blur-3xl
+          pointer-events-none
+        "
       />
 
       <Navbar />
 
       <div
         className="
-                    relative
-                    max-w-3xl
-                    mx-auto
-                    px-4
-                    py-8
-                "
+          relative
+          max-w-3xl
+          mx-auto
+          px-4
+          py-8
+        "
       >
-        <CreatePost
-          onPostCreated={fetchPosts}
-        />
+        <CreatePost onPostCreated={fetchPosts} />
+
+        {/* Feed / Explore Toggle */}
+        <div className="flex gap-3 mb-6 mt-6">
+          <button
+            onClick={() => setFeedType("feed")}
+            className={`
+              px-5 py-2 rounded-full font-medium transition-all duration-300
+              ${
+                feedType === "feed"
+                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
+                  : "bg-white/5 text-purple-300 border border-white/10 hover:bg-white/10"
+              }
+            `}
+          >
+            Feed
+          </button>
+
+          <button
+            onClick={() => setFeedType("explore")}
+            className={`
+              px-5 py-2 rounded-full font-medium transition-all duration-300
+              ${
+                feedType === "explore"
+                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
+                  : "bg-white/5 text-purple-300 border border-white/10 hover:bg-white/10"
+              }
+            `}
+          >
+            Explore
+          </button>
+        </div>
 
         {loading ? (
           <div className="space-y-6">
@@ -85,12 +123,12 @@ function Home() {
               <div
                 key={item}
                 className="
-                                    animate-pulse
-                                    rounded-3xl
-                                    bg-white/5
-                                    border border-white/10
-                                    p-6
-                                "
+                  animate-pulse
+                  rounded-3xl
+                  bg-white/5
+                  border border-white/10
+                  p-6
+                "
               >
                 <div className="h-4 w-24 bg-white/10 rounded mb-4" />
 
@@ -103,13 +141,13 @@ function Home() {
         ) : posts.length === 0 ? (
           <div
             className="
-                            text-center
-                            py-20
-                            rounded-3xl
-                            bg-white/5
-                            border border-white/10
-                            backdrop-blur-xl
-                        "
+              text-center
+              py-20
+              rounded-3xl
+              bg-white/5
+              border border-white/10
+              backdrop-blur-xl
+            "
           >
             <div className="text-5xl mb-4">
               ✨
@@ -117,16 +155,20 @@ function Home() {
 
             <h2
               className="
-                                text-xl
-                                font-semibold
-                                text-purple-200
-                            "
+                text-xl
+                font-semibold
+                text-purple-200
+              "
             >
-              No posts yet
+              {feedType === "feed"
+                ? "Your feed is empty"
+                : "No posts found"}
             </h2>
 
             <p className="text-purple-300/60 mt-2">
-              Be the first to share something.
+              {feedType === "feed"
+                ? "Follow some users or switch to Explore."
+                : "No posts available right now."}
             </p>
           </div>
         ) : (
