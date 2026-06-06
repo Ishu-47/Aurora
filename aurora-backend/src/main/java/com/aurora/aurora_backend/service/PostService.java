@@ -1,5 +1,6 @@
 package com.aurora.aurora_backend.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -8,9 +9,11 @@ import org.springframework.stereotype.Service;
 
 import com.aurora.aurora_backend.dto.CreatePostRequest;
 import com.aurora.aurora_backend.dto.PostResponseDTO;
+import com.aurora.aurora_backend.entity.Follow;
 import com.aurora.aurora_backend.entity.Like;
 import com.aurora.aurora_backend.entity.Post;
 import com.aurora.aurora_backend.entity.User;
+import com.aurora.aurora_backend.repository.FollowRepository;
 import com.aurora.aurora_backend.repository.PostRepository;
 import com.aurora.aurora_backend.repository.UserRepository;
 
@@ -21,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class PostService {
         private final PostRepository postRepository;
         private final UserRepository userRepository;
+        private final FollowRepository followRepository;
 
         public PostResponseDTO createPost(CreatePostRequest request) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -77,6 +81,32 @@ public class PostService {
                 }
                 postRepository.delete(post);
 
+        }
+
+        public List<PostResponseDTO> getFeed() {
+                Authentication authentication = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
+
+                User currUser = (User) authentication.getPrincipal();
+
+                List<User> authors = followRepository.findByFollower(currUser)
+                                .stream()
+                                .map(Follow::getFollowing)
+                                .toList();
+
+                List<Post> posts;
+
+                if (authors.isEmpty()) {
+                        posts = postRepository.findAllByOrderByCreatedAtDesc();
+                } else {
+                        List<User> feedAuthors = new ArrayList<>(authors);
+                        feedAuthors.add(currUser);
+
+                        posts = postRepository.findByAuthorInOrderByCreatedAtDesc(feedAuthors);
+                }
+
+                return posts.stream().map(post -> mapToPostResponse(post, currUser)).toList();
         }
 
         private PostResponseDTO mapToPostResponse(Post post, User currentUser) {

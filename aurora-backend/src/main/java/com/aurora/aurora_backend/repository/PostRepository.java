@@ -10,4 +10,6 @@ import com.aurora.aurora_backend.entity.User;
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByOrderByCreatedAtDesc();
     List<Post> findByAuthorOrderByCreatedAtDesc(User author);
+
+    List<Post> findByAuthorInOrderByCreatedAtDesc(List<User> authors);
 }

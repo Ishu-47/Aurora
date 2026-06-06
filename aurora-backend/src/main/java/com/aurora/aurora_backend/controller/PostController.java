@@ -21,28 +21,36 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Validated
 public class PostController {
 
     private final PostService postService;
 
-    @PostMapping
+    @PostMapping("/posts")
     public PostResponseDTO createPost(@Valid @RequestBody CreatePostRequest request) {
         return postService.createPost(request);
     }
 
-    @GetMapping
+    @GetMapping("/posts")
     public List<PostResponseDTO> getAllPosts() {
         return postService.getAllPosts();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(
-            @PathVariable Long id) {
+    @DeleteMapping("/posts/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
-
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/feed")
+    public List<PostResponseDTO> getFeed() {
+        return postService.getFeed();
+    }
+
+    @GetMapping("/explore")
+    public List<PostResponseDTO> getExploreFeed() {
+        return postService.getAllPosts();
     }
 }
