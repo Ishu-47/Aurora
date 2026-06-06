@@ -22,4 +22,10 @@ public class UserProfileResponse {
     private String profilePictureUrl;
 
     private LocalDateTime createdAt;
+
+    private long followerCount;
+
+    private long followingCount;
+
+    private boolean followedByCurrentUser;
 }
