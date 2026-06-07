@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.aurora.aurora_backend.dto.NotificationResponseDTO;
 import com.aurora.aurora_backend.entity.Notification;
 import com.aurora.aurora_backend.entity.NotificationType;
+import com.aurora.aurora_backend.entity.Post;
 import com.aurora.aurora_backend.entity.User;
 import com.aurora.aurora_backend.repository.NotificationRepository;
 import com.aurora.aurora_backend.repository.UserRepository;
@@ -21,7 +22,7 @@ public class NotificationService {
         private final NotificationRepository notificationRepository;
         private final UserRepository userRepository;
 
-        public void createNotification(User recipient, User sender, NotificationType type, String message) {
+        public void createNotification(User recipient, User sender, NotificationType type, String message, Post post) {
                 if (recipient.getId().equals(sender.getId())) {
                         return;
                 }
@@ -30,6 +31,7 @@ public class NotificationService {
                                 .sender(sender)
                                 .type(type)
                                 .message(message)
+                                .post(post)
                                 .build();
                 notificationRepository.save(notification);
         }
@@ -93,12 +95,17 @@ public class NotificationService {
                                 .countByRecipientAndReadFalse(currentUser);
         }
 
-        private NotificationResponseDTO mapToDTO(Notification notification) {
+        private NotificationResponseDTO mapToDTO(
+                        Notification notification) {
+
                 return new NotificationResponseDTO(
                                 notification.getId(),
                                 notification.getSender().getDisplayUsername(),
                                 notification.getType(),
                                 notification.getMessage(),
+                                notification.getPost() != null
+                                                ? notification.getPost().getId()
+                                                : null,
                                 notification.isRead(),
                                 notification.getCreatedAt());
         }

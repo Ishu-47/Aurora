@@ -18,60 +18,54 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LikeService {
 
-    private final LikeRepository likeRepository;
-    private final PostRepository postRepository;
-    private final NotificationService notificationService;
+        private final LikeRepository likeRepository;
+        private final PostRepository postRepository;
+        private final NotificationService notificationService;
 
-    public LikeResponse toogleLike(Long postId) {
+        public LikeResponse toogleLike(Long postId) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        User currentUser =
-                (User) authentication.getPrincipal();
+                User currentUser = (User) authentication.getPrincipal();
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() ->
-                        new RuntimeException("Post not found"));
+                Post post = postRepository.findById(postId)
+                                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        Like existingLike =
-                likeRepository.findByUserAndPost(currentUser, post)
-                        .orElse(null);
+                Like existingLike = likeRepository.findByUserAndPost(currentUser, post)
+                                .orElse(null);
 
-        boolean liked;
+                boolean liked;
 
-        if (existingLike != null) {
+                if (existingLike != null) {
 
-            likeRepository.delete(existingLike);
+                        likeRepository.delete(existingLike);
 
-            liked = false;
+                        liked = false;
 
-        } else {
+                } else {
 
-            Like like = Like.builder()
-                    .user(currentUser)
-                    .post(post)
-                    .build();
+                        Like like = Like.builder()
+                                        .user(currentUser)
+                                        .post(post)
+                                        .build();
 
-            likeRepository.save(like);
+                        likeRepository.save(like);
 
-            notificationService.createNotification(
-                    post.getAuthor(),
-                    currentUser,
-                    NotificationType.LIKE,
-                    currentUser.getDisplayUsername()
-                            + " liked your post"
-            );
+                        notificationService.createNotification(
+                                        post.getAuthor(),
+                                        currentUser,
+                                        NotificationType.LIKE,
+                                        currentUser.getDisplayUsername()
+                                                        + " liked your post",
+                                        post);
 
-            liked = true;
+                        liked = true;
+                }
+
+                long likeCount = likeRepository.countByPost(post);
+
+                return new LikeResponse(
+                                liked,
+                                likeCount);
         }
-
-        long likeCount =
-                likeRepository.countByPost(post);
-
-        return new LikeResponse(
-                liked,
-                likeCount
-        );
-    }
 }

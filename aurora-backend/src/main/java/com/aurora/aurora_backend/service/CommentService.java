@@ -21,68 +21,60 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommentService {
 
-    private final CommentRepository commentRepository;
-    private final PostRepository postRepository;
-    private final NotificationService notificationService;
+        private final CommentRepository commentRepository;
+        private final PostRepository postRepository;
+        private final NotificationService notificationService;
 
-    public CommentResponse createComment(
-            Long postId,
-            CreateCommentRequest request
-    ) {
+        public CommentResponse createComment(
+                        Long postId,
+                        CreateCommentRequest request) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        User currentUser =
-                (User) authentication.getPrincipal();
+                User currentUser = (User) authentication.getPrincipal();
 
-        Post post = postRepository
-                .findById(postId)
-                .orElseThrow(() ->
-                        new RuntimeException("Post not found"));
+                Post post = postRepository
+                                .findById(postId)
+                                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        Comment comment = Comment.builder()
-                .content(request.getContent())
-                .author(currentUser)
-                .post(post)
-                .build();
+                Comment comment = Comment.builder()
+                                .content(request.getContent())
+                                .author(currentUser)
+                                .post(post)
+                                .build();
 
-        Comment savedComment =
-                commentRepository.save(comment);
+                Comment savedComment = commentRepository.save(comment);
 
-        notificationService.createNotification(
-                post.getAuthor(),
-                currentUser,
-                NotificationType.COMMENT,
-                currentUser.getDisplayUsername()
-                        + " commented on your post"
-        );
+                notificationService.createNotification(
+                                post.getAuthor(),
+                                currentUser,
+                                NotificationType.COMMENT,
+                                currentUser.getDisplayUsername()
+                                                + " commented on your post",
+                                post);
 
-        return new CommentResponse(
-                savedComment.getId(),
-                savedComment.getContent(),
-                savedComment.getAuthor().getDisplayUsername(),
-                savedComment.getCreatedAt(),
-                0
-        );
-    }
+                return new CommentResponse(
+                                savedComment.getId(),
+                                savedComment.getContent(),
+                                savedComment.getAuthor().getDisplayUsername(),
+                                savedComment.getCreatedAt(),
+                                0);
+        }
 
-    public List<CommentResponse> getCommentsByPost(Long postId) {
+        public List<CommentResponse> getCommentsByPost(Long postId) {
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() ->
-                        new RuntimeException("Post not found"));
+                Post post = postRepository.findById(postId)
+                                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        return commentRepository
-                .findByPostOrderByCreatedAtAsc(post)
-                .stream()
-                .map(comment -> new CommentResponse(
-                        comment.getId(),
-                        comment.getContent(),
-                        comment.getAuthor().getDisplayUsername(),
-                        comment.getCreatedAt(),
-                        0
-                ))
-                .toList();
-    }
+                return commentRepository
+                                .findByPostOrderByCreatedAtAsc(post)
+                                .stream()
+                                .map(comment -> new CommentResponse(
+                                                comment.getId(),
+                                                comment.getContent(),
+                                                comment.getAuthor().getDisplayUsername(),
+                                                comment.getCreatedAt(),
+                                                0))
+                                .toList();
+        }
 }

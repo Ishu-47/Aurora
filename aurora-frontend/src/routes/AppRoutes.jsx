@@ -30,6 +30,7 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+            
 
             <Route
                 path="/:username"

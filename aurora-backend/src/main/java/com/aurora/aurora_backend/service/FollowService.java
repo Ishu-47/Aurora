@@ -16,71 +16,66 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FollowService {
 
-    private final FollowRepository followRepository;
-    private final UserRepository userRepository;
-    private final NotificationService notificationService;
+        private final FollowRepository followRepository;
+        private final UserRepository userRepository;
+        private final NotificationService notificationService;
 
-    public FollowResponse toggleFollow(String username) {
+        public FollowResponse toggleFollow(String username) {
 
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
+                String email = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
 
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("Authenticated user not found"));
+                User currentUser = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
-        User targetUser = userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                User targetUser = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (targetUser.getId().equals(currentUser.getId())) {
-            throw new RuntimeException("You can not follow yourself");
+                if (targetUser.getId().equals(currentUser.getId())) {
+                        throw new RuntimeException("You can not follow yourself");
+                }
+
+                boolean following;
+
+                Follow existingFollow = followRepository
+                                .findByFollowerAndFollowing(currentUser, targetUser)
+                                .orElse(null);
+
+                if (existingFollow != null) {
+
+                        followRepository.delete(existingFollow);
+
+                        following = false;
+
+                } else {
+
+                        Follow follow = Follow.builder()
+                                        .follower(currentUser)
+                                        .following(targetUser)
+                                        .build();
+
+                        followRepository.save(follow);
+
+                        notificationService.createNotification(
+                                        targetUser,
+                                        currentUser,
+                                        NotificationType.FOLLOW,
+                                        currentUser.getDisplayUsername()
+                                                        + " followed you",
+                                        null);
+
+                        following = true;
+                }
+
+                long followingCount = followRepository.countByFollowing(targetUser);
+
+                long followerCount = followRepository.countByFollower(targetUser);
+
+                return new FollowResponse(
+                                following,
+                                followerCount,
+                                followingCount);
         }
-
-        boolean following;
-
-        Follow existingFollow =
-                followRepository
-                        .findByFollowerAndFollowing(currentUser, targetUser)
-                        .orElse(null);
-
-        if (existingFollow != null) {
-
-            followRepository.delete(existingFollow);
-
-            following = false;
-
-        } else {
-
-            Follow follow = Follow.builder()
-                    .follower(currentUser)
-                    .following(targetUser)
-                    .build();
-
-            followRepository.save(follow);
-
-            notificationService.createNotification(
-                    targetUser,
-                    currentUser,
-                    NotificationType.FOLLOW,
-                    currentUser.getDisplayUsername() + " followed you"
-            );
-
-            following = true;
-        }
-
-        long followingCount =
-                followRepository.countByFollowing(targetUser);
-
-        long followerCount =
-                followRepository.countByFollower(targetUser);
-
-        return new FollowResponse(
-                following,
-                followerCount,
-                followingCount
-        );
-    }
 }

@@ -24,7 +24,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Notification {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -50,6 +50,10 @@ public class Notification {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
+    private Post post;
 
     @PrePersist
     public void prePersist() {
