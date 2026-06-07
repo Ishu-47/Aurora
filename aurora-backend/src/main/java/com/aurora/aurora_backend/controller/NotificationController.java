@@ -1,6 +1,7 @@
 package com.aurora.aurora_backend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,5 +35,13 @@ public class NotificationController {
     @PutMapping("/read-all")
     public void markAllAsRead() {
         notificationService.markAllAsRead();
+    }
+
+    @GetMapping("/unread-count")
+    public Map<String, Long> getUnreadCount() {
+
+        return Map.of(
+                "count",
+                notificationService.getUnreadCount());
     }
 }

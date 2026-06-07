@@ -18,74 +18,88 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
+        private final NotificationRepository notificationRepository;
+        private final UserRepository userRepository;
 
-    public void createNotification(User recipient, User sender, NotificationType type, String message) {
-        if (recipient.getId().equals(sender.getId())) {
-            return;
+        public void createNotification(User recipient, User sender, NotificationType type, String message) {
+                if (recipient.getId().equals(sender.getId())) {
+                        return;
+                }
+                Notification notification = Notification.builder()
+                                .recipient(recipient)
+                                .sender(sender)
+                                .type(type)
+                                .message(message)
+                                .build();
+                notificationRepository.save(notification);
         }
-        Notification notification = Notification.builder()
-                .recipient(recipient)
-                .sender(sender)
-                .type(type)
-                .message(message)
-                .build();
-        notificationRepository.save(notification);
-    }
 
-    public List<NotificationResponseDTO> getNotifications() {
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
+        public List<NotificationResponseDTO> getNotifications() {
+                String email = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
 
-        User currentUser = userRepository
-                .findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return notificationRepository
-                .findByRecipientOrderByCreatedAtDesc(currentUser)
-                .stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
+                return notificationRepository
+                                .findByRecipientOrderByCreatedAtDesc(currentUser)
+                                .stream()
+                                .map(this::mapToDTO)
+                                .toList();
+        }
 
-    public void markAsRead(Long notificationId) {
+        public void markAsRead(Long notificationId) {
 
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
+                Notification notification = notificationRepository.findById(notificationId)
+                                .orElseThrow(() -> new RuntimeException("Notification not found"));
 
-        notification.setRead(true);
+                notification.setRead(true);
 
-        notificationRepository.save(notification);
-    }
+                notificationRepository.save(notification);
+        }
 
-    public void markAllAsRead() {
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
+        public void markAllAsRead() {
+                String email = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
 
-        User currentUser = userRepository
-                .findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Notification> notifications = notificationRepository
-                .findByRecipientOrderByCreatedAtDesc(currentUser);
+                List<Notification> notifications = notificationRepository
+                                .findByRecipientOrderByCreatedAtDesc(currentUser);
 
-        notifications.forEach(notification -> notification.setRead(true));
+                notifications.forEach(notification -> notification.setRead(true));
 
-        notificationRepository.saveAll(notifications);
-    }
+                notificationRepository.saveAll(notifications);
+        }
 
-    private NotificationResponseDTO mapToDTO(Notification notification) {
-        return new NotificationResponseDTO(
-                notification.getId(),
-                notification.getSender().getDisplayUsername(),
-                notification.getType(),
-                notification.getMessage(),
-                notification.isRead(),
-                notification.getCreatedAt());
-    }
+        public long getUnreadCount() {
+                String email = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
+
+                User currentUser = userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                return notificationRepository
+                                .countByRecipientAndReadFalse(currentUser);
+        }
+
+        private NotificationResponseDTO mapToDTO(Notification notification) {
+                return new NotificationResponseDTO(
+                                notification.getId(),
+                                notification.getSender().getDisplayUsername(),
+                                notification.getType(),
+                                notification.getMessage(),
+                                notification.isRead(),
+                                notification.getCreatedAt());
+        }
 }

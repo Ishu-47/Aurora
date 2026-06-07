@@ -1,15 +1,37 @@
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import api from "../api/axios";
+import NotificationDropdown from "./NotificationDropdown";
 
 function Navbar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notificationOpen, setNotificationOpen] = useState(false);
+
     const handleLogout = () => {
         logout();
         navigate("/login");
     };
+
+    const fetchUnreadCount = async () => {
+        try {
+            const response = await api.get(
+                "/notifications/unread-count"
+            );
+
+            setUnreadCount(response.data.count);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchUnreadCount();
+    }, []);
 
     return (
         <nav
@@ -97,7 +119,9 @@ function Navbar() {
                                 group-hover:scale-105
                             "
                         >
-                            {user?.username?.charAt(0)?.toUpperCase()}
+                            {user?.username
+                                ?.charAt(0)
+                                ?.toUpperCase()}
                         </div>
 
                         <span
@@ -112,6 +136,64 @@ function Navbar() {
                         </span>
                     </Link>
 
+                    {/* Notification Bell */}
+                    <div className="relative">
+                        <button
+                            onClick={() =>
+                                setNotificationOpen(
+                                    !notificationOpen
+                                )
+                            }
+                            title="Notifications"
+                            className="
+                                relative
+                                p-2.5
+                                rounded-xl
+                                bg-white/5
+                                border border-white/10
+                                hover:bg-white/10
+                                transition-all duration-200
+                                hover:scale-105
+                            "
+                        >
+                            <Bell
+                                size={18}
+                                className="text-purple-200"
+                            />
+
+                            {unreadCount > 0 && (
+                                <span
+                                    className="
+                                        absolute
+                                        -top-1
+                                        -right-1
+                                        min-w-5
+                                        h-5
+                                        px-1
+                                        rounded-full
+                                        bg-red-500
+                                        text-white
+                                        text-xs
+                                        flex
+                                        items-center
+                                        justify-center
+                                        font-medium
+                                    "
+                                >
+                                    {unreadCount > 99
+                                        ? "99+"
+                                        : unreadCount}
+                                </span>
+                            )}
+                        </button>
+
+                        <NotificationDropdown
+                            open={notificationOpen}
+                            setUnreadCount={setUnreadCount}
+                        />
+                    </div>
+
+                    {/* Logout */}
                     <button
                         onClick={handleLogout}
                         title="Logout"

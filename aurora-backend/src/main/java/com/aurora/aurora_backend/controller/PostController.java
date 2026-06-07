@@ -38,6 +38,11 @@ public class PostController {
         return postService.getAllPosts();
     }
 
+    @GetMapping("/posts/{id}")
+    public PostResponseDTO getPostById(@PathVariable Long id) {
+        return postService.getPostById(id);
+    }
+
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         postService.deletePost(id);

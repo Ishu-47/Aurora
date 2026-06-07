@@ -92,7 +92,7 @@ function CommentSection({
                     className="
                         px-5 py-3
                         rounded-full
-                        bg-gradient-to-r
+                        bg-linear-to-r
                         from-pink-500
                         to-purple-600
                         text-white
@@ -121,7 +121,7 @@ function CommentSection({
                                 className="
                                     h-8 w-8
                                     rounded-full
-                                    bg-gradient-to-r
+                                    bg-linear-to-r
                                     from-pink-500
                                     to-purple-600
                                     flex items-center
@@ -156,7 +156,7 @@ function CommentSection({
                                         @{comment.username}
                                     </p>
 
-                                    <p className="text-white mt-1 break-words">
+                                    <p className="text-white mt-1 wrap-break-word">
                                         {comment.content}
                                     </p>
                                 </div>

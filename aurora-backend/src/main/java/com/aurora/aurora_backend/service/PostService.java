@@ -83,6 +83,21 @@ public class PostService {
 
         }
 
+        public PostResponseDTO getPostById(Long postId) {
+                Authentication authentication = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
+
+                User currentUser = (User) authentication.getPrincipal();
+
+                Post post = postRepository
+                                .findById(postId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Post not found"));
+
+                return mapToPostResponse(post, currentUser);
+        }
+
         public List<PostResponseDTO> getFeed() {
                 Authentication authentication = SecurityContextHolder
                                 .getContext()
@@ -96,7 +111,6 @@ public class PostService {
                                 .toList();
 
                 List<Post> posts;
-
                 if (authors.isEmpty()) {
                         posts = postRepository.findAllByOrderByCreatedAtDesc();
                 } else {
