@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.aurora.aurora_backend.dto.CommentResponse;
 import com.aurora.aurora_backend.dto.CreateCommentRequest;
 import com.aurora.aurora_backend.entity.Comment;
+import com.aurora.aurora_backend.entity.NotificationType;
 import com.aurora.aurora_backend.entity.Post;
 import com.aurora.aurora_backend.entity.User;
 import com.aurora.aurora_backend.repository.CommentRepository;
@@ -22,16 +23,23 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
-    public CommentResponse createComment(Long postId, CreateCommentRequest request) {
+    public CommentResponse createComment(
+            Long postId,
+            CreateCommentRequest request
+    ) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-        User currentUser = (User) authentication.getPrincipal();
+        User currentUser =
+                (User) authentication.getPrincipal();
 
         Post post = postRepository
                 .findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Post not found"));
 
         Comment comment = Comment.builder()
                 .content(request.getContent())
@@ -39,19 +47,31 @@ public class CommentService {
                 .post(post)
                 .build();
 
-        Comment savedComment = commentRepository.save(comment);
+        Comment savedComment =
+                commentRepository.save(comment);
+
+        notificationService.createNotification(
+                post.getAuthor(),
+                currentUser,
+                NotificationType.COMMENT,
+                currentUser.getDisplayUsername()
+                        + " commented on your post"
+        );
 
         return new CommentResponse(
                 savedComment.getId(),
                 savedComment.getContent(),
                 savedComment.getAuthor().getDisplayUsername(),
                 savedComment.getCreatedAt(),
-                0);
+                0
+        );
     }
 
     public List<CommentResponse> getCommentsByPost(Long postId) {
 
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new RuntimeException("Post not found"));
 
         return commentRepository
                 .findByPostOrderByCreatedAtAsc(post)
@@ -61,7 +81,8 @@ public class CommentService {
                         comment.getContent(),
                         comment.getAuthor().getDisplayUsername(),
                         comment.getCreatedAt(),
-                        0))
+                        0
+                ))
                 .toList();
     }
 }
