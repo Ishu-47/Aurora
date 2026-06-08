@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.aurora.aurora_backend.dto.NotificationEventDTO;
 import com.aurora.aurora_backend.dto.NotificationResponseDTO;
 import com.aurora.aurora_backend.entity.Notification;
 import com.aurora.aurora_backend.entity.NotificationType;
@@ -19,12 +20,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationService {
 
+        private final NotificationWebsocketService notificationWebsocketService;
         private final NotificationRepository notificationRepository;
         private final UserRepository userRepository;
 
-        public void createNotification(User recipient, User sender, NotificationType type, String message, Post post) {
+        public Notification createNotification(User recipient, User sender, NotificationType type, String message,
+                        Post post) {
                 if (recipient.getId().equals(sender.getId())) {
-                        return;
+                        return null;
                 }
                 Notification notification = Notification.builder()
                                 .recipient(recipient)
@@ -33,18 +36,17 @@ public class NotificationService {
                                 .message(message)
                                 .post(post)
                                 .build();
-                notificationRepository.save(notification);
+
+                Notification saved = notificationRepository.save(notification);
+                NotificationResponseDTO response = mapToDTO(notification);
+                long unreadCount = notificationRepository.countByRecipientAndReadFalse(recipient);
+                NotificationEventDTO event = new NotificationEventDTO(response, unreadCount);
+                notificationWebsocketService.sendNotification(recipient.getEmail(), event);
+                return saved;
         }
 
         public List<NotificationResponseDTO> getNotifications() {
-                String email = SecurityContextHolder
-                                .getContext()
-                                .getAuthentication()
-                                .getName();
-
-                User currentUser = userRepository
-                                .findByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = getCurrentUser();
 
                 return notificationRepository
                                 .findByRecipientOrderByCreatedAtDesc(currentUser)
@@ -54,25 +56,16 @@ public class NotificationService {
         }
 
         public void markAsRead(Long notificationId) {
-
-                Notification notification = notificationRepository.findById(notificationId)
+                Notification notification = notificationRepository
+                                .findById(notificationId)
                                 .orElseThrow(() -> new RuntimeException("Notification not found"));
-
                 notification.setRead(true);
-
                 notificationRepository.save(notification);
         }
 
         public void markAllAsRead() {
-                String email = SecurityContextHolder
-                                .getContext()
-                                .getAuthentication()
-                                .getName();
 
-                User currentUser = userRepository
-                                .findByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
+                User currentUser = getCurrentUser();
                 List<Notification> notifications = notificationRepository
                                 .findByRecipientOrderByCreatedAtDesc(currentUser);
 
@@ -82,25 +75,17 @@ public class NotificationService {
         }
 
         public long getUnreadCount() {
-                String email = SecurityContextHolder
-                                .getContext()
-                                .getAuthentication()
-                                .getName();
 
-                User currentUser = userRepository
-                                .findByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                return notificationRepository
-                                .countByRecipientAndReadFalse(currentUser);
+                User currentUser = getCurrentUser();
+                return notificationRepository.countByRecipientAndReadFalse(currentUser);
         }
 
-        private NotificationResponseDTO mapToDTO(
-                        Notification notification) {
+        public NotificationResponseDTO mapToDTO(Notification notification) {
 
                 return new NotificationResponseDTO(
                                 notification.getId(),
-                                notification.getSender().getDisplayUsername(),
+                                notification.getSender()
+                                                .getDisplayUsername(),
                                 notification.getType(),
                                 notification.getMessage(),
                                 notification.getPost() != null
@@ -108,5 +93,15 @@ public class NotificationService {
                                                 : null,
                                 notification.isRead(),
                                 notification.getCreatedAt());
+        }
+
+        private User getCurrentUser() {
+                String email = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
+                return userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
         }
 }
