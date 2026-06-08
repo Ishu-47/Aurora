@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Home from "../pages/Home";
 import ProfilePage from "../pages/ProfilePage";
 import NotificationsPage from "../pages/NotificationsPage";
+import SinglePostPage from "../pages/SinglePostPage";
 
 function AppRoutes() {
     return (
@@ -30,7 +31,15 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
-            
+            <Route
+                path="/posts/:postId"
+                element={
+                    <ProtectedRoute>
+                        <SinglePostPage />
+                    </ProtectedRoute>
+                }
+            />
+
 
             <Route
                 path="/:username"
