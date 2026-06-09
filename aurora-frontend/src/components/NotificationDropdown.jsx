@@ -1,7 +1,70 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNow, formatDistanceToNowStrict } from "date-fns";
+import {
+    Heart,
+    MessageCircle,
+    UserPlus,
+    Bell,
+} from "lucide-react";
+
 import api from "../api/axios";
+
+const getNotificationIcon = (type) => {
+    switch (type?.toUpperCase()) {
+        case "LIKE":
+            return (
+                <Heart
+                    size={18}
+                    className="text-pink-400"
+                />
+            );
+
+        case "COMMENT":
+            return (
+                <MessageCircle
+                    size={18}
+                    className="text-sky-400"
+                />
+            );
+
+        case "FOLLOW":
+            return (
+                <UserPlus
+                    size={18}
+                    className="text-green-400"
+                />
+            );
+
+        default:
+            return (
+                <Bell
+                    size={18}
+                    className="text-purple-400"
+                />
+            );
+    }
+};
+
+const getTimeAgo = (createdAt) => {
+    const text = formatDistanceToNowStrict(
+        new Date(createdAt)
+    );
+
+    return text
+        .replace(" seconds", "s")
+        .replace(" second", "s")
+        .replace(" minutes", "m")
+        .replace(" minute", "m")
+        .replace(" hours", "h")
+        .replace(" hour", "h")
+        .replace(" days", "d")
+        .replace(" day", "d")
+        .replace(" months", "mo")
+        .replace(" month", "mo")
+        .replace(" years", "y")
+        .replace(" year", "y");
+};
 
 function NotificationDropdown({
     open,
@@ -24,6 +87,11 @@ function NotificationDropdown({
                     "/notifications"
                 );
 
+            console.log(
+                "Notifications:",
+                response.data
+            );
+
             setNotifications(
                 response.data
             );
@@ -39,65 +107,6 @@ function NotificationDropdown({
             fetchNotifications();
         }
     }, [open]);
-
-    const getTimeAgo = (
-        createdAt
-    ) => {
-        const text =
-            formatDistanceToNowStrict(
-                new Date(createdAt)
-            );
-
-        return text
-            .replace(
-                " seconds",
-                "s"
-            )
-            .replace(
-                " second",
-                "s"
-            )
-            .replace(
-                " minutes",
-                "m"
-            )
-            .replace(
-                " minute",
-                "m"
-            )
-            .replace(
-                " hours",
-                "h"
-            )
-            .replace(
-                " hour",
-                "h"
-            )
-            .replace(
-                " days",
-                "d"
-            )
-            .replace(
-                " day",
-                "d"
-            )
-            .replace(
-                " months",
-                "mo"
-            )
-            .replace(
-                " month",
-                "mo"
-            )
-            .replace(
-                " years",
-                "y"
-            )
-            .replace(
-                " year",
-                "y"
-            );
-    };
 
     const markAsRead = async (
         id
@@ -238,15 +247,19 @@ function NotificationDropdown({
                         text-sm
                         text-purple-300
                         hover:text-white
+                        transition-colors
                     "
                 >
                     Mark all read
                 </button>
             </div>
 
-            <div className="max-h-112.5 overflow-y-auto">
+            <div className="max-h-112.5 overflow-y-auto notification-scrollbar">
                 {loading ? (
-                    <div className="p-6 text-center
+                    <div
+                        className="
+                            p-6
+                            text-center
                             text-purple-300
                         "
                     >
@@ -284,30 +297,48 @@ function NotificationDropdown({
                                     border-b
                                     border-white/5
                                     transition-all
+                                    duration-200
                                     hover:bg-white/5
 
                                     ${!notification.read
-                                        ? "bg-purple-500/10 border-l-4 border-purple-500"
+                                        ? `
+                                                bg-linear-to-r
+                                                from-purple-500/10
+                                                to-pink-500/10
+                                                border-l-4
+                                                border-purple-500
+                                              `
                                         : ""
                                     }
                                 `}
                             >
-                                <div className="flex gap-3">
-                                    {!notification.read && (
-                                        <div
-                                            className="
-                                                mt-2
-                                                h-2
-                                                w-2
-                                                rounded-full
-                                                bg-purple-400
-                                                shrink-0
-                                            "
-                                        />
-                                    )}
+                                <div className="flex gap-3 items-start">
+                                    <div
+                                        className="
+                                            h-10
+                                            w-10
+                                            rounded-full
+                                            bg-white/5
+                                            border border-white/10
+                                            flex
+                                            items-center
+                                            justify-center
+                                            shrink-0
+                                        "
+                                    >
+                                        {getNotificationIcon(
+                                            notification.type
+                                        )}
+                                    </div>
 
-                                    <div className="flex-1">
-                                        <p className="text-white">
+                                    <div className="flex-1 min-w-0">
+                                        <p
+                                            className="
+                                                text-white
+                                                text-sm
+                                                leading-relaxed
+                                            "
+                                        >
                                             {
                                                 notification.message
                                             }
@@ -318,13 +349,14 @@ function NotificationDropdown({
                                                 flex
                                                 items-center
                                                 justify-between
-                                                mt-1
+                                                mt-2
                                             "
                                         >
                                             <p
                                                 className="
                                                     text-xs
                                                     text-purple-300/70
+                                                    truncate
                                                 "
                                             >
                                                 {
@@ -336,6 +368,7 @@ function NotificationDropdown({
                                                 className="
                                                     text-xs
                                                     text-purple-400/60
+                                                    shrink-0
                                                 "
                                             >
                                                 {getTimeAgo(
