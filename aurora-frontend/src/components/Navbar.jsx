@@ -1,38 +1,35 @@
 import { useNavigate, Link } from "react-router-dom";
 import { LogOut, Bell } from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
-import { useEffect, useState } from "react";
-import api from "../api/axios";
+import { useNotifications } from "../context/NotificationContext";
+
+import { useState } from "react";
+
 import NotificationDropdown from "./NotificationDropdown";
 
 function Navbar() {
     const { user, logout } = useAuth();
+
+    const {
+        unreadCount,
+        setUnreadCount,
+    } = useNotifications();
+
     const navigate = useNavigate();
 
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [notificationOpen, setNotificationOpen] = useState(false);
+    const [notificationOpen,
+        setNotificationOpen] =
+        useState(false);
 
     const handleLogout = () => {
         logout();
         navigate("/login");
     };
-
-    const fetchUnreadCount = async () => {
-        try {
-            const response = await api.get(
-                "/notifications/unread-count"
-            );
-
-            setUnreadCount(response.data.count);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    useEffect(() => {
-        fetchUnreadCount();
-    }, []);
-
+    console.log(
+    "NAVBAR COUNT:",
+    unreadCount
+);
     return (
         <nav
             className="
@@ -50,7 +47,6 @@ function Navbar() {
                     flex items-center justify-between
                 "
             >
-                {/* Logo */}
                 <Link
                     to="/"
                     className="flex items-center gap-3 group"
@@ -94,7 +90,6 @@ function Navbar() {
                     </div>
                 </Link>
 
-                {/* User Section */}
                 <div className="flex items-center gap-4">
                     <Link
                         to={`/${user?.username}`}
@@ -136,7 +131,6 @@ function Navbar() {
                         </span>
                     </Link>
 
-                    {/* Notification Bell */}
                     <div className="relative">
                         <button
                             onClick={() =>
@@ -193,7 +187,6 @@ function Navbar() {
                         />
                     </div>
 
-                    {/* Logout */}
                     <button
                         onClick={handleLogout}
                         title="Logout"

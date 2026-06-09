@@ -244,7 +244,7 @@ function NotificationDropdown({
                 </button>
             </div>
 
-            <div className="max-h-[450px] overflow-y-auto">
+            <div className="max-h-112.5 overflow-y-auto">
                 {loading ? (
                     <div className="p-6 text-center
                             text-purple-300
