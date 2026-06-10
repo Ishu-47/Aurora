@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.aurora.aurora_backend.dto.ConversationListItemDTO;
 import com.aurora.aurora_backend.dto.ConversationResponseDTO;
+import com.aurora.aurora_backend.dto.MessageResponseDTO;
 import com.aurora.aurora_backend.entity.Conversation;
 import com.aurora.aurora_backend.entity.ConversationParticipant;
 import com.aurora.aurora_backend.entity.Message;
@@ -92,5 +93,38 @@ public class ConversationService {
                 Comparator.nullsLast(Comparator.reverseOrder()))).toList();
     }
 
-    
+    public List<MessageResponseDTO> getMessages(Long conversationId) {
+
+        String currentEmail = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        User currentUser = userRepository
+                .findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Conversation conversation = conversationRepository
+                .findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+
+        boolean participant = participantRepository
+                .existsByConversationAndUser(conversation, currentUser);
+
+        if (!participant) {
+            throw new RuntimeException(
+                    "Access denied");
+        }
+
+        return messageRepository
+                .findByConversationOrderByCreatedAtAsc(conversation)
+                .stream()
+                .map(message -> new MessageResponseDTO(
+                        message.getId(),
+                        message.getSender().getId(),
+                        message.getSender().getDisplayUsername(),
+                        message.getContent(),
+                        message.getCreatedAt()))
+                .toList();
+    }
+
 }

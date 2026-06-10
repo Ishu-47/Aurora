@@ -7,3 +7,7 @@ export const getConversations = async () => {
     const response = await api.get(`/conversations`);
     return response.data;
 };
+export const getMessages = async (conversationId) => {
+    const response = await api.get( `/conversations/${conversationId}/messages`);
+    return response.data;
+};
