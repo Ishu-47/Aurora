@@ -1,18 +1,22 @@
 import api from "../api/axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "../components/PostCard";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import { createOrGetConversation } from "../services/conversationService";
 
 function ProfilePage() {
   const { username } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
+
 
   useEffect(() => {
     setLoading(true);
@@ -84,6 +88,20 @@ function ProfilePage() {
     );
   }
 
+  const handleMessage = async () => {
+    try {
+      setMessageLoading(true);
+      const response = await createOrGetConversation(username);
+      navigate(`/messages?conversation=${response.conversationId}`);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failded to open conversation"
+      );
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
   const isOwnProfile =
     user?.username === profile.username;
 
@@ -127,8 +145,8 @@ function ProfilePage() {
                   onClick={handleFollow}
                   disabled={followLoading}
                   className={`px-5 py-2 rounded-full font-medium transition-all ${profile.followedByCurrentUser
-                      ? "bg-zinc-800 hover:bg-zinc-700 border border-zinc-700"
-                      : "bg-violet-600 hover:bg-violet-500"
+                    ? "bg-zinc-800 hover:bg-zinc-700 border border-zinc-700"
+                    : "bg-violet-600 hover:bg-violet-500"
                     }`}
                 >
                   {followLoading
@@ -136,6 +154,22 @@ function ProfilePage() {
                     : profile.followedByCurrentUser
                       ? "Following"
                       : "Follow"}
+                </button>
+              )}
+
+              {!isOwnProfile && (
+                <button
+                  onClick={handleMessage}
+                  className="
+            px-4
+            py-2
+            rounded-lg
+            bg-purple-600
+            hover:bg-purple-700
+            transition
+        "
+                >
+                  {messageLoading ? "Opening..." : "Message"}
                 </button>
               )}
             </div>

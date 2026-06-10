@@ -1,11 +1,15 @@
 import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute";
+
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Home from "../pages/Home";
 import ProfilePage from "../pages/ProfilePage";
 import NotificationsPage from "../pages/NotificationsPage";
 import SinglePostPage from "../pages/SinglePostPage";
+import MessagesPage from "../pages/MessagePage";
+
+
 
 function AppRoutes() {
     return (
@@ -31,6 +35,7 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+
             <Route
                 path="/posts/:postId"
                 element={
@@ -40,6 +45,14 @@ function AppRoutes() {
                 }
             />
 
+            <Route
+                path="/messages"
+                element={
+                    <ProtectedRoute>
+                        <MessagesPage />
+                    </ProtectedRoute>
+                }
+            />
 
             <Route
                 path="/:username"
