@@ -1,9 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Search, Sparkles } from "lucide-react";
 
-import { getConversations } from "../services/conversationService";
+import { useAuth } from "../context/AuthContext";
+import { getConversations, getMessages, sendMessage, } from "../services/conversationService";
+import MessageBubble from "../components/MessageBubble";
+
+
+
+
 
 // Deterministic gradient per username initial
 const avatarGradients = [
@@ -121,6 +127,12 @@ function MessagePage() {
     const [conversations, setConversations] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
 
+    const { user } = useAuth();
+
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
+    const messagesEndRef = useRef(null);
+
     const conversationId = Number(searchParams.get("conversation"));
 
     useEffect(() => {
@@ -134,6 +146,28 @@ function MessagePage() {
         };
         loadConversations();
     }, []);
+    useEffect(() => {
+        if (!conversationId) {
+            setMessages([]);
+            return;
+        }
+
+        const loadMessages = async () => {
+            try {
+                const data = await getMessages(conversationId);
+                setMessages(data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        loadMessages();
+    }, [conversationId]);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+    }, [messages]);
 
     const filtered = conversations.filter(c =>
         !searchQuery || c.username?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -141,6 +175,27 @@ function MessagePage() {
 
     const handleSelect = (id) => {
         setSearchParams({ conversation: id });
+    };
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !conversationId) {
+            return;
+        }
+
+        try {
+            const sentMessage = await sendMessage(
+                conversationId,
+                newMessage
+            );
+
+            setMessages((prev) => [
+                ...prev,
+                sentMessage,
+            ]);
+
+            setNewMessage("");
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
@@ -253,35 +308,111 @@ function MessagePage() {
                             /* Active conversation placeholder */
                             <motion.div
                                 key="conversation"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-center px-8"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="w-full h-full flex flex-col"
                             >
-                                {/* Find active conversation */}
                                 {(() => {
-                                    const conv = conversations.find(c => c.conversationId === conversationId);
-                                    const gradient = getGradient(conv?.username);
-                                    const initial = conv?.username?.charAt(0)?.toUpperCase() ?? "?";
+                                    const conv = conversations.find(
+                                        (c) => c.conversationId === conversationId
+                                    );
+
                                     return (
                                         <>
-                                            <motion.div
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 20 }}
-                                                className={`
-                                                    w-20 h-20 rounded-full bg-gradient-to-br ${gradient}
-                                                    flex items-center justify-center mx-auto mb-4
-                                                    text-white text-3xl font-bold shadow-2xl
-                                                `}
-                                            />
-                                            <h2 className="text-2xl font-bold text-white mb-1">
-                                                {conv?.username ?? "Conversation"}
-                                            </h2>
-                                            <p className="text-zinc-500 text-sm">
-                                                Conversation #{conversationId}
-                                            </p>
+                                            {/* Header */}
+
+                                            <div
+                                                className="
+                        h-20
+                        px-8
+                        flex
+                        items-center
+                        border-b
+                        border-white/5
+                    "
+                                            >
+                                                <div>
+                                                    <h2 className="text-white font-semibold text-lg">
+                                                        {conv?.username}
+                                                    </h2>
+                                                </div>
+                                            </div>
+
+                                            {/* Messages */}
+
+                                            <div
+                                                className="
+                        flex-1
+                        overflow-y-auto
+                        px-8
+                        py-6
+                    "
+                                            >
+                                                {messages.map((message) => (
+                                                    <MessageBubble
+                                                        key={message.id}
+                                                        message={message}
+                                                        isMine={
+                                                            message.senderId === user?.id
+                                                        }
+                                                    />
+                                                ))}
+
+                                                <div ref={messagesEndRef} />
+                                            </div>
+
+                                            {/* Input */}
+
+                                            <div
+                                                className="
+                        p-6
+                        border-t
+                        border-white/5
+                    "
+                                            >
+                                                <div className="flex gap-3">
+                                                    <input
+                                                        type="text"
+                                                        value={newMessage}
+                                                        onChange={(e) =>
+                                                            setNewMessage(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") {
+                                                                handleSendMessage();
+                                                            }
+                                                        }}
+                                                        placeholder="Type a message..."
+                                                        className="
+                                flex-1
+                                bg-white/5
+                                border
+                                border-white/10
+                                rounded-2xl
+                                px-4
+                                py-3
+                                text-white
+                                outline-none
+                            "
+                                                    />
+
+                                                    <button
+                                                        onClick={handleSendMessage}
+                                                        className="
+                                px-6
+                                rounded-2xl
+                                bg-white
+                                text-black
+                                font-medium
+                            "
+                                                    >
+                                                        Send
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </>
                                     );
                                 })()}

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.aurora.aurora_backend.dto.ConversationListItemDTO;
 import com.aurora.aurora_backend.dto.ConversationResponseDTO;
 import com.aurora.aurora_backend.dto.MessageResponseDTO;
+import com.aurora.aurora_backend.dto.SendMessageRequestDTO;
 import com.aurora.aurora_backend.entity.Conversation;
 import com.aurora.aurora_backend.entity.ConversationParticipant;
 import com.aurora.aurora_backend.entity.Message;
@@ -125,6 +126,57 @@ public class ConversationService {
                         message.getContent(),
                         message.getCreatedAt()))
                 .toList();
+    }
+
+    public MessageResponseDTO sendMessage(
+            SendMessageRequestDTO request) {
+
+        String currentEmail = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User sender = userRepository
+                .findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException(
+                        "User not found"));
+
+        Conversation conversation = conversationRepository
+                .findById(
+                        request.conversationId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Conversation not found"));
+
+        boolean participant = participantRepository
+                .existsByConversationAndUser(
+                        conversation,
+                        sender);
+
+        if (!participant) {
+            throw new RuntimeException(
+                    "Access denied");
+        }
+
+        Message message = new Message();
+
+        message.setConversation(
+                conversation);
+
+        message.setSender(
+                sender);
+
+        message.setContent(
+                request.content().trim());
+
+        message = messageRepository.save(
+                message);
+
+        return new MessageResponseDTO(
+                message.getId(),
+                sender.getId(),
+                sender.getDisplayUsername(),
+                message.getContent(),
+                message.getCreatedAt());
     }
 
 }
