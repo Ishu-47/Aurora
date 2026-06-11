@@ -1,6 +1,7 @@
 package com.aurora.aurora_backend.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,5 +25,8 @@ public interface ConversationParticipantRepository extends JpaRepository<Convers
             """)
     List<ConversationParticipant> findByConversationWithUser(
             Conversation conversation);
+
+    Optional<ConversationParticipant> findByConversationAndUser(Conversation conversation, User user);
+    
 
 }

@@ -1,5 +1,7 @@
 package com.aurora.aurora_backend.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,4 +37,9 @@ public class ConversationParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private User user;
+
+    @Column(nullable = false)
+    private Integer unreadCount = 0;
+
+    private LocalDateTime lastReadAt;
 }

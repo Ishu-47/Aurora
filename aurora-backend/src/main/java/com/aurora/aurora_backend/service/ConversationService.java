@@ -90,7 +90,8 @@ public class ConversationService {
                                         : "Unknown User",
                                         otherUser != null ? otherUser.getProfilePictureUrl() : null,
                                         lastMessage != null ? lastMessage.getContent() : null,
-                                        lastMessage != null ? lastMessage.getCreatedAt() : null);
+                                        lastMessage != null ? lastMessage.getCreatedAt() : null,
+                                        participation.getUnreadCount());
                 }).sorted(Comparator.comparing(ConversationListItemDTO::lastMessageTime,
                                 Comparator.nullsLast(Comparator.reverseOrder()))).toList();
         }
@@ -113,8 +114,7 @@ public class ConversationService {
                                 .existsByConversationAndUser(conversation, currentUser);
 
                 if (!participant) {
-                        throw new RuntimeException(
-                                        "Access denied");
+                        throw new RuntimeException("Access denied");
                 }
 
                 return messageRepository
@@ -130,8 +130,7 @@ public class ConversationService {
                                 .toList();
         }
 
-        public MessageResponseDTO sendMessage(
-                        SendMessageRequestDTO request) {
+        public MessageResponseDTO sendMessage(SendMessageRequestDTO request) {
 
                 String currentEmail = SecurityContextHolder
                                 .getContext()
@@ -140,45 +139,48 @@ public class ConversationService {
 
                 User sender = userRepository
                                 .findByEmail(currentEmail)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "User not found"));
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
                 return createMessage(sender, request.conversationId(), request.content());
         }
 
-        public MessageResponseDTO createMessage(
-                        User sender,
-                        Long conversationId,
-                        String content) {
+        public MessageResponseDTO createMessage(User sender, Long conversationId, String content) {
 
                 Conversation conversation = conversationRepository
                                 .findById(conversationId)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Conversation not found"));
+                                .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
                 boolean participant = participantRepository
-                                .existsByConversationAndUser(
-                                                conversation,
-                                                sender);
+                                .existsByConversationAndUser(conversation, sender);
 
                 if (!participant) {
-                        throw new RuntimeException(
-                                        "Access denied");
+                        throw new RuntimeException("Access denied");
                 }
 
                 Message message = new Message();
 
-                message.setConversation(
-                                conversation);
+                message.setConversation(conversation);
 
                 message.setSender(
                                 sender);
 
-                message.setContent(
-                                content.trim());
+                message.setContent(content.trim());
 
-                message = messageRepository.save(
-                                message);
+                message = messageRepository.save(message);
+                List<ConversationParticipant> participants = participantRepository
+                                .findByConversation(
+                                                conversation);
+
+                for (ConversationParticipant part : participants) {
+
+                        if (part.getUser().getId().equals(sender.getId())) {
+                                continue;
+                        }
+
+                        part.setUnreadCount(part.getUnreadCount() + 1);
+
+                        participantRepository.save(part);
+                }
 
                 return new MessageResponseDTO(
                                 message.getId(),
@@ -189,4 +191,5 @@ public class ConversationService {
                                 message.getCreatedAt());
         }
 
+        
 }
