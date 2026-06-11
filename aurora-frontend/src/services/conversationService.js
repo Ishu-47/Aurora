@@ -15,3 +15,6 @@ export const sendMessage = async (conversationId, content) => {
     const response = await api.post("/conversations/messages", { conversationId, content, });
     return response.data;
 };
+export const markConversationAsRead = async (conversationId) => {
+    await api.put(`/conversations/${conversationId}/read`);
+};

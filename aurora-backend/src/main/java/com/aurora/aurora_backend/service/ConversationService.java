@@ -190,6 +190,28 @@ public class ConversationService {
                                 message.getContent(),
                                 message.getCreatedAt());
         }
+        public void markConversationAsRead(Long conversationId) {
+                String currentEmail = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
 
+                User currentUser = userRepository
+                                .findByEmail(currentEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                Conversation conversation = conversationRepository
+                                .findById(conversationId)
+                                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+
+                ConversationParticipant participant = participantRepository
+                                .findByConversationAndUser(conversation, currentUser)
+                                .orElseThrow(() -> new RuntimeException("Participant not found"));
+
+                participant.setUnreadCount(0);
+                participant.setLastReadAt(java.time.LocalDateTime.now());
+
+                participantRepository.save(participant);
+        }
         
 }

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Search, Sparkles } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
-import { getConversations, getMessages, sendMessage, } from "../services/conversationService";
+import { getConversations, getMessages, markConversationAsRead, sendMessage, } from "../services/conversationService";
 import MessageBubble from "../components/MessageBubble";
 import { sendChatMessage, subscribeMessages } from "../websocket/chatSocket";
 
@@ -146,6 +146,31 @@ function MessagePage() {
         return () => {
             subscription?.unsubscribe();
         };
+    }, [conversationId]);
+
+    useEffect(() => {
+        if (!conversationId) {
+            return;
+        }
+        const loadMessages = async () => {
+            try {
+
+                await markConversationAsRead(
+                    conversationId
+                );
+                const data =
+                    await getMessages(
+                        conversationId
+                    );
+
+                setMessages(data);
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        loadMessages();
+
     }, [conversationId]);
 
     useEffect(() => {

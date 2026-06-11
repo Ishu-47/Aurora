@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +46,11 @@ public class ConversationController {
             @RequestBody @Valid SendMessageRequestDTO request) {
 
         return conversationService.sendMessage(request);
+    }
+
+    @PutMapping("/{conversationId}/read")
+    public void markConversationAsRead(@PathVariable Long conversationId) {
+        conversationService.markConversationAsRead(conversationId);
     }
 
 }
