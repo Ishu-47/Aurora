@@ -122,6 +122,7 @@ public class ConversationService {
                                 .stream()
                                 .map(message -> new MessageResponseDTO(
                                                 message.getId(),
+                                                conversationId,
                                                 message.getSender().getId(),
                                                 message.getSender().getDisplayUsername(),
                                                 message.getContent(),
@@ -181,6 +182,7 @@ public class ConversationService {
 
                 return new MessageResponseDTO(
                                 message.getId(),
+                                conversationId,
                                 sender.getId(),
                                 sender.getDisplayUsername(),
                                 message.getContent(),

@@ -8,9 +8,12 @@ import {
 import api from "../api/axios";
 
 import {
-    connectNotficationSocket,
-    disconnectNotificationSocket,
+    subscribeNotifications,
 } from "../websocket/notificationSocket";
+
+import {
+    disconnectSocket,
+} from "../websocket/socketClient";
 
 import { useAuth } from "./AuthContext";
 
@@ -22,12 +25,15 @@ export function NotificationProvider({
 }) {
     const { user } = useAuth();
 
-    const [unreadCount,
-        setUnreadCount] = useState(0);
+    const [
+        unreadCount,
+        setUnreadCount,
+    ] = useState(0);
 
-    const [latestNotification,
-        setLatestNotification] =
-        useState(null);
+    const [
+        latestNotification,
+        setLatestNotification,
+    ] = useState(null);
 
     const fetchUnreadCount =
         async () => {
@@ -44,23 +50,7 @@ export function NotificationProvider({
                 console.error(error);
             }
         };
-    useEffect(() => {
-        console.log(
-            "NotificationProvider mounted"
-        );
 
-        return () => {
-            console.log(
-                "NotificationProvider unmounted"
-            );
-        };
-    }, []);
-    useEffect(() => {
-        console.log(
-            "UNREAD COUNT CHANGED:",
-            unreadCount
-        );
-    }, [unreadCount]);
     useEffect(() => {
         if (!user) {
             return;
@@ -73,21 +63,17 @@ export function NotificationProvider({
                 "token"
             );
 
-        connectNotficationSocket(
+        subscribeNotifications(
             token,
             (event) => {
                 console.log(
-                    "WS EVENT:",
+                    "NOTIFICATION:",
                     event
                 );
 
-                console.log(
-                    "UNREAD:",
-                    event.unreadCount
-                );
-
                 setUnreadCount(
-                    event.unreadCount
+                    event.unreadCount ??
+                    0
                 );
 
                 setLatestNotification(
@@ -95,8 +81,9 @@ export function NotificationProvider({
                 );
             }
         );
+
         return () => {
-            disconnectNotificationSocket();
+            disconnectSocket();
         };
     }, [user]);
 

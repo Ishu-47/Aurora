@@ -6,9 +6,7 @@ import { MessageCircle, Search, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getConversations, getMessages, sendMessage, } from "../services/conversationService";
 import MessageBubble from "../components/MessageBubble";
-
-
-
+import { sendChatMessage, subscribeMessages } from "../websocket/chatSocket";
 
 
 // Deterministic gradient per username initial
@@ -75,12 +73,12 @@ function ConversationCard({ conversation, active, onClick }) {
 
             <div className="flex items-center gap-3 pl-1">
                 {/* Avatar */}
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                     <motion.div
                         whileHover={{ scale: 1.08 }}
                         transition={{ duration: 0.15 }}
                         className={`
-                            w-14 h-14 rounded-full bg-gradient-to-br ${gradient}
+                            w-14 h-14 rounded-full bg-linear-to-br ${gradient}
                             flex items-center justify-center
                             text-white font-semibold text-lg
                             shadow-lg
@@ -98,7 +96,7 @@ function ConversationCard({ conversation, active, onClick }) {
                         <span className={`font-semibold text-sm truncate ${active ? "text-white" : "text-zinc-100"}`}>
                             {conversation.username}
                         </span>
-                        <span className="text-[11px] text-zinc-500 flex-shrink-0 ml-2">
+                        <span className="text-[11px] text-zinc-500 shrink-0 ml-2">
                             {time}
                         </span>
                     </div>
@@ -110,7 +108,7 @@ function ConversationCard({ conversation, active, onClick }) {
                             <motion.span
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center"
+                                className="shrink-0 min-w-4.5 h-4.5 px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center"
                             >
                                 {unread > 99 ? "99+" : unread}
                             </motion.span>
@@ -133,7 +131,22 @@ function MessagePage() {
     const [newMessage, setNewMessage] = useState("");
     const messagesEndRef = useRef(null);
 
-    const conversationId = Number(searchParams.get("conversation"));
+    const conversationParam = searchParams.get("conversation");
+    const conversationId = conversationParam
+        ? Number(conversationParam)
+        : null;
+
+    useEffect(() => {
+        const subscription = subscribeMessages((message) => {
+            if (message.conversationId === conversationId) {
+                setMessages((prev) => [...prev, message]);
+            }
+        });
+
+        return () => {
+            subscription?.unsubscribe();
+        };
+    }, [conversationId]);
 
     useEffect(() => {
         const loadConversations = async () => {
@@ -144,8 +157,10 @@ function MessagePage() {
                 console.error(error);
             }
         };
+
         loadConversations();
     }, []);
+
     useEffect(() => {
         if (!conversationId) {
             setMessages([]);
@@ -163,34 +178,51 @@ function MessagePage() {
 
         loadMessages();
     }, [conversationId]);
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({
             behavior: "smooth",
         });
     }, [messages]);
 
-    const filtered = conversations.filter(c =>
-        !searchQuery || c.username?.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = conversations.filter(
+        (c) =>
+            !searchQuery ||
+            c.username?.toLowerCase().includes(
+                searchQuery.toLowerCase()
+            )
     );
 
     const handleSelect = (id) => {
         setSearchParams({ conversation: id });
     };
+
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !conversationId) {
             return;
         }
 
         try {
-            const sentMessage = await sendMessage(
+            const optimisticMessage = {
+                id: Date.now(),
+                conversationId,
+                senderId: user.id,
+                senderUsername: user.username,
+                content: newMessage,
+                createdAt: new Date().toISOString(),
+            };
+
+            setMessages(prev => [
+                ...prev,
+                optimisticMessage,
+            ]);
+
+            sendChatMessage(
                 conversationId,
                 newMessage
             );
 
-            setMessages((prev) => [
-                ...prev,
-                sentMessage,
-            ]);
+            setNewMessage("");
 
             setNewMessage("");
         } catch (error) {
@@ -207,7 +239,7 @@ function MessagePage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
-                className="h-full max-w-7xl mx-auto rounded-[32px] overflow-hidden flex"
+                className="h-full max-w-7xl mx-auto rounded-4xl overflow-hidden flex"
                 style={{
                     background: "#0a0a0a",
                     boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.6)",
@@ -215,7 +247,7 @@ function MessagePage() {
             >
                 {/* ── SIDEBAR ── */}
                 <div
-                    className="w-[340px] md:w-[320px] flex-shrink-0 flex flex-col"
+                    className="w-85 md:w-[320px] shrink-0 flex flex-col"
                     style={{
                         borderRight: "1px solid rgba(255,255,255,0.06)",
                         background: "#0c0c0c",
@@ -296,7 +328,7 @@ function MessagePage() {
                         }}
                     />
                     <div
-                        className="pointer-events-none absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.03]"
+                        className="pointer-events-none absolute -bottom-32 -right-32 w-125 h-125 rounded-full opacity-[0.03]"
                         style={{
                             background: "radial-gradient(circle, rgba(255,255,255,1) 0%, transparent 70%)",
                             filter: "blur(80px)",

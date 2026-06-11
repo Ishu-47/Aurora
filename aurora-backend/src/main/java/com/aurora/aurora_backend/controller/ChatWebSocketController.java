@@ -37,15 +37,24 @@ public class ChatWebSocketController {
                 request.content());
         Conversation conversation = conversationRepository.findById(request.conversationId()).orElseThrow();
 
-        List<ConversationParticipant> participants = participantRepository.findByConversation(conversation);
+        List<ConversationParticipant> participants = participantRepository.findByConversationWithUser(conversation);
         for (ConversationParticipant participant : participants) {
+            if (participant.getUser()
+                    .getId()
+                    .equals(sender.getId())) {
+                continue;
+            }
             messagingTemplate.convertAndSendToUser(
                     participant
                             .getUser()
                             .getEmail(),
                     "/queue/messages",
                     message);
+            System.out.println(
+                    "Sending to: "
+                            + participant.getUser().getEmail());
         }
-        
+        System.out.println("CHAT MESSAGE RECEIVED");
+
     }
 }
