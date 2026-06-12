@@ -137,15 +137,83 @@ function MessagePage() {
         : null;
 
     useEffect(() => {
-        const subscription = subscribeMessages((message) => {
-            if (message.conversationId === conversationId) {
-                setMessages((prev) => [...prev, message]);
+
+        const subscription = subscribeMessages(
+            (message) => {
+
+                if (
+                    Number(message.conversationId) ===
+                    conversationId
+                ) {
+
+                    setMessages(prev => {
+
+                        const exists =
+                            prev.some(
+                                m => m.id === message.id
+                            );
+
+                        if (exists) {
+                            return prev;
+                        }
+
+                        return [
+                            ...prev,
+                            message
+                        ];
+                    });
+
+                }
+
+                setConversations(prev => {
+
+                    const updated =
+                        prev.map(conversation => {
+
+                            if (
+                                conversation.conversationId !==
+                                message.conversationId
+                            ) {
+                                return conversation;
+                            }
+
+                            return {
+                                ...conversation,
+
+                                lastMessage:
+                                    message.content,
+
+                                lastMessageTime:
+                                    message.createdAt,
+
+                                unreadCount:
+                                    Number(message.conversationId) ===
+                                        conversationId
+                                        ? 0
+                                        : (conversation.unreadCount ?? 0) + 1
+                            };
+                        });
+
+                    updated.sort(
+                        (a, b) =>
+                            new Date(
+                                b.lastMessageTime || 0
+                            ) -
+                            new Date(
+                                a.lastMessageTime || 0
+                            )
+                    );
+
+                    return [...updated];
+                });
+
             }
-        });
+        );
 
         return () => {
             subscription?.unsubscribe();
         };
+
     }, [conversationId]);
 
     useEffect(() => {
@@ -164,6 +232,16 @@ function MessagePage() {
                     );
 
                 setMessages(data);
+                setConversations(prev =>
+                    prev.map(conversation =>
+                        conversation.conversationId === conversationId
+                            ? {
+                                ...conversation,
+                                unreadCount: 0
+                            }
+                            : conversation
+                    )
+                );
 
             } catch (error) {
                 console.error(error);
@@ -186,23 +264,23 @@ function MessagePage() {
         loadConversations();
     }, []);
 
-    useEffect(() => {
-        if (!conversationId) {
-            setMessages([]);
-            return;
-        }
+    // useEffect(() => {
+    //     if (!conversationId) {
+    //         setMessages([]);
+    //         return;
+    //     }
 
-        const loadMessages = async () => {
-            try {
-                const data = await getMessages(conversationId);
-                setMessages(data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
+    //     const loadMessages = async () => {
+    //         try {
+    //             const data = await getMessages(conversationId);
+    //             setMessages(data);
+    //         } catch (error) {
+    //             console.error(error);
+    //         }
+    //     };
 
-        loadMessages();
-    }, [conversationId]);
+    //     loadMessages();
+    // }, [conversationId]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({
@@ -241,13 +319,37 @@ function MessagePage() {
                 ...prev,
                 optimisticMessage,
             ]);
+            setConversations(prev => {
+
+                const updated = prev.map(conversation => {
+
+                    if (
+                        conversation.conversationId !==
+                        conversationId
+                    ) {
+                        return conversation;
+                    }
+
+                    return {
+                        ...conversation,
+                        lastMessage: newMessage,
+                        lastMessageTime: new Date().toISOString(),
+                    };
+                });
+
+                updated.sort(
+                    (a, b) =>
+                        new Date(b.lastMessageTime || 0) -
+                        new Date(a.lastMessageTime || 0)
+                );
+
+                return [...updated];
+            });
 
             sendChatMessage(
                 conversationId,
                 newMessage
             );
-
-            setNewMessage("");
 
             setNewMessage("");
         } catch (error) {
