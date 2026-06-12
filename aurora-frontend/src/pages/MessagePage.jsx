@@ -38,7 +38,7 @@ function formatTime(timestamp) {
 function ConversationCard({ conversation, active, onClick }) {
     const gradient = getGradient(conversation.username);
     const initial = conversation.username?.charAt(0)?.toUpperCase() ?? "?";
-    const time = formatTime(conversation.updatedAt || conversation.timestamp);
+    const time = formatTime(conversation.lastMessageTime);
     const unread = conversation.unreadCount ?? 0;
 
     return (
@@ -255,6 +255,13 @@ function MessagePage() {
         const loadConversations = async () => {
             try {
                 const data = await getConversations();
+
+                data.sort(
+                    (a, b) =>
+                        new Date(b.lastMessageTime || 0) -
+                        new Date(a.lastMessageTime || 0)
+                );
+
                 setConversations(data);
             } catch (error) {
                 console.error(error);
