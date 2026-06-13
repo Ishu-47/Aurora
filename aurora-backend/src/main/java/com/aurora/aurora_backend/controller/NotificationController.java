@@ -40,8 +40,6 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public Map<String, Long> getUnreadCount() {
 
-        return Map.of(
-                "count",
-                notificationService.getUnreadCount());
+        return Map.of("count", notificationService.getUnreadCount());
     }
 }

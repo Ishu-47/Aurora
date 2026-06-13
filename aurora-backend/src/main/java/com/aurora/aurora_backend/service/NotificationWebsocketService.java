@@ -15,30 +15,17 @@ public class NotificationWebsocketService {
         private final SimpMessagingTemplate messagingTemplate;
         private final SimpUserRegistry simpUserRegistry;
 
-        public void sendNotification(
-                        String recipientEmail,
-                        NotificationEventDTO event) {
+        public void sendNotification(String recipientEmail, NotificationEventDTO event) {
 
-                System.out.println(
-                                "Sending notification to: "
-                                                + recipientEmail);
-                System.out.println(
-                                "Connected users: "
-                                                + simpUserRegistry.getUsers());
+                System.out.println("Sending notification to: " + recipientEmail);
+                System.out.println("Connected users: " + simpUserRegistry.getUsers());
 
-                System.out.println(
-                                "Unread count sent: "
-                                                + event.getUnreadCount());
+                System.out.println("Unread count sent: " + event.getUnreadCount());
 
                 for (SimpUser user : simpUserRegistry.getUsers()) {
-                        System.out.println(
-                                        "Connected user: "
-                                                        + user.getName());
+                        System.out.println("Connected user: " + user.getName());
                 }
 
-                messagingTemplate.convertAndSendToUser(
-                                recipientEmail,
-                                "/queue/notifications",
-                                event);
+                messagingTemplate.convertAndSendToUser(recipientEmail, "/queue/notifications", event);
         }
 }
