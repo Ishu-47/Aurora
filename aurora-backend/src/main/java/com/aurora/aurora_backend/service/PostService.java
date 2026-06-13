@@ -35,15 +35,7 @@ public class PostService {
 
                 User user = userRepository.findByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
-                System.out.println("Request reached controller");
-                System.out.println("Content: " + content);
-
-                if (image == null) {
-                        System.out.println("Image is NULL");
-                } else {
-                        System.out.println("Image name = " + image.getOriginalFilename());
-                        System.out.println("Image size = " + image.getSize());
-                }
+                
                 if ((content == null || content.isBlank())
                                 && (image == null || image.isEmpty())) {
 
@@ -169,6 +161,7 @@ public class PostService {
                                 post.getContent(),
                                 post.getImageUrl(),
                                 post.getAuthor().getDisplayUsername(),
+                                post.getAuthor().getProfilePictureUrl(),
                                 post.getCreatedAt(),
                                 likeCount,
                                 likedByCurrentUser,
