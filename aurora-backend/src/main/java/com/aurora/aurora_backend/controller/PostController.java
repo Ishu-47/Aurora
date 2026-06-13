@@ -4,6 +4,7 @@ import com.aurora.aurora_backend.service.PostService;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.aurora.aurora_backend.dto.CreatePostRequest;
 import com.aurora.aurora_backend.dto.PostResponseDTO;
@@ -28,9 +31,19 @@ public class PostController {
 
     private final PostService postService;
 
-    @PostMapping("/posts")
-    public PostResponseDTO createPost(@Valid @RequestBody CreatePostRequest request) {
-        return postService.createPost(request);
+    // @PostMapping("/posts")
+    // public PostResponseDTO createPost(@Valid @RequestBody CreatePostRequest
+    // request) {
+    // return postService.createPost(request);
+    // }
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public PostResponseDTO createPost(
+            @RequestParam(value = "content", required = false) String content,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+
+        System.out.println("Content: " + content);
+        System.out.println("Image: " + (image != null ? image.getOriginalFilename() : "null"));
+        return postService.createPost(content, image);
     }
 
     @GetMapping("/posts")

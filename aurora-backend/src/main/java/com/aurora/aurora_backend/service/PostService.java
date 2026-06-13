@@ -6,8 +6,9 @@ import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.aurora.aurora_backend.dto.CreatePostRequest;
+// import com.aurora.aurora_backend.dto.CreatePostRequest;
 import com.aurora.aurora_backend.dto.PostResponseDTO;
 import com.aurora.aurora_backend.entity.Follow;
 import com.aurora.aurora_backend.entity.Like;
@@ -22,20 +23,51 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+        private final CloudinaryService cloudinaryService;
         private final PostRepository postRepository;
         private final UserRepository userRepository;
         private final FollowRepository followRepository;
 
-        public PostResponseDTO createPost(CreatePostRequest request) {
+        public PostResponseDTO createPost(String content, MultipartFile image) {
+
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 String email = authentication.getName();
-                User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+                System.out.println("Request reached controller");
+                System.out.println("Content: " + content);
+
+                if (image == null) {
+                        System.out.println("Image is NULL");
+                } else {
+                        System.out.println("Image name = " + image.getOriginalFilename());
+                        System.out.println("Image size = " + image.getSize());
+                }
+                if ((content == null || content.isBlank())
+                                && (image == null || image.isEmpty())) {
+
+                        throw new RuntimeException("Post must contain text or image");
+                }
+
+                String imageUrl = null;
+
+                try {
+                        if (image != null && !image.isEmpty()) {
+                                imageUrl = cloudinaryService.uploadImage(image);
+                        }
+                } catch (Exception e) {
+                        throw new RuntimeException("Failed to upload image", e);
+                }
+
                 Post post = Post.builder()
-                                .content(request.getContent())
+                                .content(content)
+                                .imageUrl(imageUrl)
                                 .author(user)
                                 .build();
 
                 Post savedPost = postRepository.save(post);
+
                 return mapToPostResponse(savedPost, user);
         }
 
@@ -92,8 +124,7 @@ public class PostService {
 
                 Post post = postRepository
                                 .findById(postId)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Post not found"));
+                                .orElseThrow(() -> new RuntimeException("Post not found"));
 
                 return mapToPostResponse(post, currentUser);
         }
@@ -136,6 +167,7 @@ public class PostService {
                 return new PostResponseDTO(
                                 post.getId(),
                                 post.getContent(),
+                                post.getImageUrl(),
                                 post.getAuthor().getDisplayUsername(),
                                 post.getCreatedAt(),
                                 likeCount,
