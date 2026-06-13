@@ -79,21 +79,35 @@ function PostCard({ post, currentUser, onDelete }) {
         >
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                    <div
-                        className="
-                            h-11 w-11
-                            rounded-full
-                            bg-linear-to-r
-                            from-pink-500
-                            to-purple-600
-                            flex items-center justify-center
-                            text-white
-                            font-bold
-                            shadow-lg
-                        "
-                    >
-                        {post.username?.charAt(0)?.toUpperCase()}
-                    </div>
+                    {post.authorProfilePictureUrl ? (
+                        <img
+                            src={post.authorProfilePictureUrl}
+                            alt={post.username}
+                            className="
+            h-11
+            w-11
+            rounded-full
+            object-cover
+            border border-white/10
+        "
+                        />
+                    ) : (
+                        <div
+                            className="
+            h-11 w-11
+            rounded-full
+            bg-linear-to-r
+            from-pink-500
+            to-purple-600
+            flex items-center justify-center
+            text-white
+            font-bold
+            shadow-lg
+        "
+                        >
+                            {post.username?.charAt(0)?.toUpperCase()}
+                        </div>
+                    )}
 
                     <div>
                         <h3 className="text-purple-200 font-semibold">
