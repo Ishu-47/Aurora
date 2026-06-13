@@ -138,8 +138,30 @@ function PostCard({ post, currentUser, onDelete }) {
                     wrap-break-word
                 "
             >
-                {post.content}
+                {post.content && (
+                    <p
+                        className="mt-5 text-white text-lg leading-relaxed wrap-break-word"
+                    >
+                        {post.content}
+                    </p>
+                )}
             </p>
+            {post.imageUrl && (
+                <div className="mt-4">
+                    <img
+                        src={post.imageUrl}
+                        alt="Post"
+                        className="
+                w-full
+                max-h-125
+                object-cover
+                rounded-2xl
+                border border-white/10
+            "
+                        loading="lazy"
+                    />
+                </div>
+            )}
 
             <div className="mt-5 flex items-center gap-6">
                 <div className="flex items-center gap-2">
