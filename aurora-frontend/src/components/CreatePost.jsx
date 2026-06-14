@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../api/axios";
@@ -11,6 +11,27 @@ function CreatePost({ onPostCreated }) {
   const [image, setImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get(
+          `/users/${user.username}`
+        );
+
+        setProfilePictureUrl(
+          response.data.profilePictureUrl
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    if (user?.username) {
+      fetchProfile();
+    }
+  }, [user]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -73,7 +94,7 @@ function CreatePost({ onPostCreated }) {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Failed to create post"
+        "Failed to create post"
       );
     } finally {
       setLoading(false);
@@ -95,21 +116,36 @@ function CreatePost({ onPostCreated }) {
       "
     >
       <div className="flex items-center gap-3 mb-5">
-        <div
-          className="
-            h-12 w-12
-            rounded-full
-            bg-linear-to-r
-            from-pink-500
-            to-purple-600
-            flex items-center justify-center
-            text-white
-            font-bold
-            shadow-lg
-          "
-        >
-          {user?.username?.charAt(0)?.toUpperCase()}
-        </div>
+        {profilePictureUrl ? (
+          <img
+            src={profilePictureUrl}
+            alt={user?.username}
+            className="
+      h-12
+      w-12
+      rounded-full
+      object-cover
+      border
+      border-white/10
+    "
+          />
+        ) : (
+          <div
+            className="
+      h-12 w-12
+      rounded-full
+      bg-linear-to-r
+      from-pink-500
+      to-purple-600
+      flex items-center justify-center
+      text-white
+      font-bold
+      shadow-lg
+    "
+          >
+            {user?.username?.charAt(0)?.toUpperCase()}
+          </div>
+        )}
 
         <div>
           <p className="font-semibold text-purple-100">

@@ -4,6 +4,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.aurora.aurora_backend.dto.UpdateProfileRequest;
 import com.aurora.aurora_backend.dto.UserProfileResponse;
 import com.aurora.aurora_backend.entity.User;
 import com.aurora.aurora_backend.repository.FollowRepository;
@@ -72,6 +73,21 @@ public class UserService {
                 String imageUrl = cloudinaryService.uploadImage(image);
 
                 user.setProfilePictureUrl(imageUrl);
+                userRepository.save(user);
+                return getProfile(user.getDisplayUsername());
+        }
+
+        public UserProfileResponse updateProfile(UpdateProfileRequest request) {
+                String email = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                                .getName();
+
+                User user = userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                user.setBio(request.bio());
                 userRepository.save(user);
                 return getProfile(user.getDisplayUsername());
         }

@@ -1,16 +1,36 @@
 import { useNavigate, Link } from "react-router-dom";
 import { LogOut, Bell } from "lucide-react";
+import api from "../api/axios";
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import NotificationDropdown from "./NotificationDropdown";
 
 function Navbar() {
     const { user, logout } = useAuth();
+    const [profilePictureUrl, setProfilePictureUrl] = useState(null);
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await api.get(
+                    `/users/${user.username}`
+                );
 
+                setProfilePictureUrl(
+                    response.data.profilePictureUrl
+                );
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        if (user?.username) {
+            fetchProfile();
+        }
+    }, [user]);
     const {
         unreadCount,
         setUnreadCount,
@@ -27,10 +47,7 @@ function Navbar() {
         navigate("/login");
     };
 
-    console.log(
-        "NAVBAR COUNT:",
-        unreadCount
-    );
+    
 
     return (
         <>
@@ -113,25 +130,36 @@ function Navbar() {
                                 transition-all duration-200
                             "
                         >
-                            <div
-                                className="
-                                    h-11 w-11
-                                    rounded-full
-                                    bg-linear-to-r
-                                    from-purple-500
-                                    to-pink-500
-                                    flex items-center justify-center
-                                    font-semibold
-                                    text-white
-                                    shadow-lg
-                                    transition-transform duration-200
-                                    group-hover:scale-105
-                                "
-                            >
-                                {user?.username
-                                    ?.charAt(0)
-                                    ?.toUpperCase()}
-                            </div>
+                            {profilePictureUrl ? (
+                                <img
+                                    src={profilePictureUrl}
+                                    alt={user?.username}
+                                    className="
+      h-12
+      w-12
+      rounded-full
+      object-cover
+      border
+      border-white/10
+    "
+                                />
+                            ) : (
+                                <div
+                                    className="
+      h-12 w-12
+      rounded-full
+      bg-linear-to-r
+      from-pink-500
+      to-purple-600
+      flex items-center justify-center
+      text-white
+      font-bold
+      shadow-lg
+    "
+                                >
+                                    {user?.username?.charAt(0)?.toUpperCase()}
+                                </div>
+                            )}
 
                             <span
                                 className="

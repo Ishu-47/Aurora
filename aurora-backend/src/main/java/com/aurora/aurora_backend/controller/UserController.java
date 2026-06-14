@@ -7,16 +7,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.aurora.aurora_backend.dto.PostResponseDTO;
+import com.aurora.aurora_backend.dto.UpdateProfileRequest;
 import com.aurora.aurora_backend.dto.UserProfileResponse;
 import com.aurora.aurora_backend.service.PostService;
 import com.aurora.aurora_backend.service.UserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -42,6 +45,14 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> updateProfilePicture(@RequestParam("image") MultipartFile image) {
 
         return ResponseEntity.ok(userService.updateProfilePicture(image));
-        
+
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserProfileResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request) {
+
+        return ResponseEntity.ok(
+                userService.updateProfile(request));
     }
 }

@@ -143,7 +143,7 @@ function PostCard({ post, currentUser, onDelete }) {
                 )}
             </div>
 
-            <p
+            <div
                 className="
                     mt-5
                     text-white
@@ -159,7 +159,7 @@ function PostCard({ post, currentUser, onDelete }) {
                         {post.content}
                     </p>
                 )}
-            </p>
+            </div>
             {post.imageUrl && (
                 <div className="mt-4">
                     <img

@@ -116,9 +116,24 @@ function ProfilePage() {
           <div className="px-6 pb-6">
 
             <div className="-mt-12">
-              <div className="w-24 h-24 rounded-full border-4 border-zinc-900 bg-zinc-700 flex items-center justify-center text-3xl font-bold">
-                {profile.username?.charAt(0).toUpperCase()}
-              </div>
+              {profile.profilePictureUrl ? (
+                <img
+                  src={profile.profilePictureUrl}
+                  alt={profile.username}
+                  className="
+      w-24
+      h-24
+      rounded-full
+      object-cover
+      border-4
+      border-zinc-900
+    "
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full border-4 border-zinc-900 bg-zinc-700 flex items-center justify-center text-3xl font-bold">
+                  {profile.username?.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -154,6 +169,22 @@ function ProfilePage() {
                     : profile.followedByCurrentUser
                       ? "Following"
                       : "Follow"}
+                </button>
+              )}
+              {isOwnProfile && (
+                <button
+                  onClick={() => navigate("/settings")}
+                  className="
+      px-5
+      py-2
+      rounded-full
+      font-medium
+      bg-violet-600
+      hover:bg-violet-500
+      transition-all
+    "
+                >
+                  Edit Profile
                 </button>
               )}
 

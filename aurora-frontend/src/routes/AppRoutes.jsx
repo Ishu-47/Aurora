@@ -8,8 +8,7 @@ import ProfilePage from "../pages/ProfilePage";
 import NotificationsPage from "../pages/NotificationsPage";
 import SinglePostPage from "../pages/SinglePostPage";
 import MessagesPage from "../pages/MessagePage";
-
-
+import SettingsPage from "../pages/SettingsPage";
 
 function AppRoutes() {
     return (
@@ -23,6 +22,15 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <Home />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/settings"
+                element={
+                    <ProtectedRoute>
+                        <SettingsPage />
                     </ProtectedRoute>
                 }
             />
