@@ -2,8 +2,9 @@ package com.aurora.aurora_backend.controller;
 
 import com.aurora.aurora_backend.service.PostService;
 
-import java.util.List;
+// import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -47,8 +48,11 @@ public class PostController {
     }
 
     @GetMapping("/posts")
-    public List<PostResponseDTO> getAllPosts() {
-        return postService.getAllPosts();
+    public Page<PostResponseDTO> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return postService.getAllPosts(page, size);
     }
 
     @GetMapping("/posts/{id}")
@@ -63,12 +67,18 @@ public class PostController {
     }
 
     @GetMapping("/feed")
-    public List<PostResponseDTO> getFeed() {
-        return postService.getFeed();
+    public Page<PostResponseDTO> getFeed(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return postService.getFeed(page, size);
     }
 
     @GetMapping("/explore")
-    public List<PostResponseDTO> getExploreFeed() {
-        return postService.getAllPosts();
+    public Page<PostResponseDTO> getExploreFeed(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return postService.getAllPosts(page, size);
     }
 }

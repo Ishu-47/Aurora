@@ -1,7 +1,8 @@
 package com.aurora.aurora_backend.controller;
 
-import java.util.List;
+// import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,10 +36,13 @@ public class UserController {
     }
 
     @GetMapping("/{username}/posts")
-    public ResponseEntity<List<PostResponseDTO>> getUserPosts(
-            @PathVariable String username) {
+    public ResponseEntity<Page<PostResponseDTO>> getUserPosts(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
         return ResponseEntity.ok(
-                postService.getUserPosts(username));
+                postService.getUserPosts(username, page, size));
     }
 
     @PutMapping(value = "/profile-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

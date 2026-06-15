@@ -3,6 +3,9 @@ package com.aurora.aurora_backend.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,7 +38,7 @@ public class PostService {
 
                 User user = userRepository.findByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
-                
+
                 if ((content == null || content.isBlank())
                                 && (image == null || image.isEmpty())) {
 
@@ -63,22 +66,27 @@ public class PostService {
                 return mapToPostResponse(savedPost, user);
         }
 
-        public List<PostResponseDTO> getAllPosts() {
+        public Page<PostResponseDTO> getAllPosts(int page, int size) {
 
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                Authentication authentication = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
 
                 User currentUser = (User) authentication.getPrincipal();
 
-                List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+                Pageable pageable = PageRequest.of(page, size);
 
-                return posts.stream()
-                                .map(post -> mapToPostResponse(post, currentUser))
-                                .toList();
+                Page<Post> posts = postRepository
+                                .findAllByOrderByCreatedAtDesc(pageable);
+
+                return posts.map(post -> mapToPostResponse(post, currentUser));
         }
 
-        public List<PostResponseDTO> getUserPosts(String username) {
+        public Page<PostResponseDTO> getUserPosts(String username, int page, int size) {
 
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                Authentication authentication = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
 
                 User currentUser = (User) authentication.getPrincipal();
 
@@ -86,11 +94,12 @@ public class PostService {
                                 .findByUsername(username)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-                return postRepository
-                                .findByAuthorOrderByCreatedAtDesc(user)
-                                .stream()
-                                .map(post -> mapToPostResponse(post, currentUser))
-                                .toList();
+                Pageable pageable = PageRequest.of(page, size);
+
+                Page<Post> posts = postRepository
+                                .findByAuthorOrderByCreatedAtDesc(user, pageable);
+
+                return posts.map(post -> mapToPostResponse(post, currentUser));
         }
 
         public void deletePost(Long postId) {
@@ -121,29 +130,30 @@ public class PostService {
                 return mapToPostResponse(post, currentUser);
         }
 
-        public List<PostResponseDTO> getFeed() {
+        public Page<PostResponseDTO> getFeed(int page, int size) {
                 Authentication authentication = SecurityContextHolder
                                 .getContext()
                                 .getAuthentication();
 
                 User currUser = (User) authentication.getPrincipal();
 
+                Pageable pageable = PageRequest.of(page, size);
                 List<User> authors = followRepository.findByFollower(currUser)
                                 .stream()
                                 .map(Follow::getFollowing)
                                 .toList();
 
-                List<Post> posts;
+                Page<Post> posts;
                 if (authors.isEmpty()) {
-                        posts = postRepository.findAllByOrderByCreatedAtDesc();
+                        posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
                 } else {
                         List<User> feedAuthors = new ArrayList<>(authors);
                         feedAuthors.add(currUser);
 
-                        posts = postRepository.findByAuthorInOrderByCreatedAtDesc(feedAuthors);
+                        posts = postRepository.findByAuthorInOrderByCreatedAtDesc(feedAuthors, pageable);
                 }
 
-                return posts.stream().map(post -> mapToPostResponse(post, currUser)).toList();
+                return posts.map(post -> mapToPostResponse(post, currUser));
         }
 
         private PostResponseDTO mapToPostResponse(Post post, User currentUser) {
