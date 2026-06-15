@@ -31,6 +31,9 @@ services:
     image: aurora-backend
     container_name: aurora-backend
 
+    env_file:
+    - .env
+
     ports:
       - "8080:8080"
 
