@@ -1,11 +1,14 @@
 package com.aurora.aurora_backend.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ import com.aurora.aurora_backend.entity.Follow;
 import com.aurora.aurora_backend.entity.Like;
 import com.aurora.aurora_backend.entity.Post;
 import com.aurora.aurora_backend.entity.User;
+import com.aurora.aurora_backend.redis.ExploreCacheEntry;
 import com.aurora.aurora_backend.repository.FollowRepository;
 import com.aurora.aurora_backend.repository.PostRepository;
 import com.aurora.aurora_backend.repository.UserRepository;
@@ -30,6 +34,7 @@ public class PostService {
         private final PostRepository postRepository;
         private final UserRepository userRepository;
         private final FollowRepository followRepository;
+        private final RedisTemplate<String, ExploreCacheEntry> exploreCacheRedisTemplate;
 
         public PostResponseDTO createPost(String content, MultipartFile image) {
 
@@ -62,11 +67,30 @@ public class PostService {
                                 .build();
 
                 Post savedPost = postRepository.save(post);
+                clearExploreCache();
 
                 return mapToPostResponse(savedPost, user);
         }
 
         public Page<PostResponseDTO> getAllPosts(int page, int size) {
+
+                String cacheKey = "explore:page:" + page + ":size:" + size;
+
+                ExploreCacheEntry cached = exploreCacheRedisTemplate
+                                .opsForValue()
+                                .get(cacheKey);
+
+                Pageable pageable = PageRequest.of(page, size);
+
+                if (cached != null) {
+                        System.out.println("EXPLORE CACHE HIT");
+                        return new PageImpl<>(
+                                        cached.getPosts(),
+                                        pageable,
+                                        cached.getTotalElements());
+                }
+
+                System.out.println("EXPLORE CACHE MISS");
 
                 Authentication authentication = SecurityContextHolder
                                 .getContext()
@@ -74,12 +98,23 @@ public class PostService {
 
                 User currentUser = (User) authentication.getPrincipal();
 
-                Pageable pageable = PageRequest.of(page, size);
-
                 Page<Post> posts = postRepository
                                 .findAllByOrderByCreatedAtDesc(pageable);
 
-                return posts.map(post -> mapToPostResponse(post, currentUser));
+                Page<PostResponseDTO> response = posts.map(
+                                post -> mapToPostResponse(post, currentUser));
+
+                ExploreCacheEntry entry = new ExploreCacheEntry(
+                                response.getContent(),
+                                response.getTotalElements(),
+                                response.getTotalPages(),
+                                response.isLast());
+
+                exploreCacheRedisTemplate
+                                .opsForValue()
+                                .set(cacheKey, entry, Duration.ofSeconds(60));
+
+                return response;
         }
 
         public Page<PostResponseDTO> getUserPosts(String username, int page, int size) {
@@ -113,6 +148,7 @@ public class PostService {
                         throw new RuntimeException("You can delete only your own posts");
                 }
                 postRepository.delete(post);
+                clearExploreCache();
 
         }
 
@@ -176,5 +212,14 @@ public class PostService {
                                 likeCount,
                                 likedByCurrentUser,
                                 commentCount);
+        }
+
+        private void clearExploreCache() {
+
+                var keys = exploreCacheRedisTemplate.keys("explore:*");
+
+                if (keys != null && !keys.isEmpty()) {
+                        exploreCacheRedisTemplate.delete(keys);
+                }
         }
 }

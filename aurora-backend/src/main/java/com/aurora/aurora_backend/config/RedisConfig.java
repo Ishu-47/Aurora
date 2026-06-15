@@ -2,6 +2,7 @@ package com.aurora.aurora_backend.config;
 
 import java.time.Duration;
 
+
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.aurora.aurora_backend.redis.ChatMessageEvent;
 import com.aurora.aurora_backend.redis.ChatMessageSubscriber;
+import com.aurora.aurora_backend.redis.ExploreCacheEntry;
 import com.aurora.aurora_backend.redis.RedisChannels;
 
 @Configuration
@@ -30,6 +32,28 @@ public class RedisConfig {
 
         JacksonJsonRedisSerializer<ChatMessageEvent> serializer = new JacksonJsonRedisSerializer<>(
                 ChatMessageEvent.class);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
+
+        template.afterPropertiesSet();
+
+        return template;
+    }
+
+    @Bean
+    public RedisTemplate<String, ExploreCacheEntry> exploreCacheRedisTemplate(
+            RedisConnectionFactory connectionFactory) {
+
+        RedisTemplate<String, ExploreCacheEntry> template = new RedisTemplate<>();
+
+        template.setConnectionFactory(connectionFactory);
+
+        JacksonJsonRedisSerializer<ExploreCacheEntry> serializer = new JacksonJsonRedisSerializer<>(
+                ExploreCacheEntry.class);
 
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
