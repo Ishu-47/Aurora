@@ -27,6 +27,19 @@ services:
     volumes:
       - redis_data:/data
 
+  aurora-backend:
+    image: aurora-backend
+    container_name: aurora-backend
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - postgres
+      - redis
+
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:

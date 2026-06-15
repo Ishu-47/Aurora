@@ -31,7 +31,7 @@ function ProfilePage() {
       ]);
 
       setProfile(profileRes.data);
-      setPosts(postsRes.data);
+      setPosts(postsRes.data.content);
     } catch (err) {
       console.error(err);
       setProfile(null);
