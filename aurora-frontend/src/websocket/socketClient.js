@@ -9,7 +9,7 @@ export const connectSocket = (token) => {
     }
 
     stompClient = new Client({
-        brokerURL: VITE_WS_URL,
+        brokerURL: import.meta.env.VITE_WS_URL,
 
         connectHeaders: {
             Authorization: `Bearer ${token}`,
