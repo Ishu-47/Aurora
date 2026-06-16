@@ -41,7 +41,7 @@ services:
       - postgres
       - redis
 
-    restart: unless-stopped
+    restart: unless-Enable TLS for Upstash Redisstopped
 
 volumes:
   postgres_data:
