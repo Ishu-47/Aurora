@@ -8,9 +8,9 @@ Aurora focuses on production readiness, scalability, maintainability, performanc
 
 ## Live Demo
 
-**Frontend:** https://your-frontend-url
+**Frontend:** https://aurora-seven-orpin.vercel.app/
 
-**Backend API:** https://your-backend-url
+**Backend API:** https://aurora-evlj.onrender.com
 
 ---
 
